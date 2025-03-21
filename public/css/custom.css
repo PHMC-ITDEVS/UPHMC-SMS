@@ -716,6 +716,7 @@ html[data-bs-theme=dark] .bg-secondary{
 .p-password svg{
     margin-top:14px;
     top:0%;
+    right: 4%;
 }
 
 .p-component ol,.p-component ul{
