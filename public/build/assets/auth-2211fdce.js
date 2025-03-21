@@ -1,1 +1,0 @@
-import{q as e}from"./app-095fd413.js";var r="auth";const n={async login(t){return e.post(`${r}/login`,t)},async validate(t){return e.post(`${r}/validate`,t)},async resend_otp(t){return e.post(`${r}/otp/resend`,t)}};export{n as A};

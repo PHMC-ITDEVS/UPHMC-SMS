@@ -1,15 +1,12 @@
-/* Styles */
-import "primevue/resources/themes/saga-blue/theme.css";
-import "primevue/resources/primevue.min.css";
-import "primeflex/primeflex.css";
+/* Theme */
+import Aura from '@primeuix/themes/aura';
 
 /* Icons */
 import 'primeicons/primeicons.css';
 
-
 import PrimeVue from 'primevue/config';
 
-// PrimeVue Service
+// PrimeVue Services
 import ConfirmationService from 'primevue/confirmationservice';
 import ToastService from 'primevue/toastservice';
 
@@ -49,7 +46,6 @@ import Timeline from 'primevue/timeline';
 import Ripple from 'primevue/ripple';
 import Tooltip from 'primevue/tooltip';
 
-
 const primevue = {
     components: [
         { name: "p-card", val: Card },
@@ -80,14 +76,40 @@ const primevue = {
         { name: "p-autocomplete", val: AutoComplete },
         { name: "p-timeline", val: Timeline },
     ],
-    directive:[
-        {name:"ripple",val:Ripple},
-        {name:"tooltip",val:Tooltip}
+    directive: [
+        { name: "ripple", val: Ripple },
+        { name: "tooltip", val: Tooltip }
     ],
-    service:[ToastService,ConfirmationService],
-    config:PrimeVue
+    service: [ToastService, ConfirmationService],
+    config: PrimeVue
 };
 
+// PrimeVue Configuration with Aura Theme
+export function setupPrimeVue(app) {
+    app.use(PrimeVue, {
+        theme: {
+            preset: Aura,
+            options: {
+                prefix: 'p',
+                darkModeSelector: false,
+                cssLayer: false
+            }
+        }
+    });
 
-  
+    // Register services
+    app.use(ToastService);
+    app.use(ConfirmationService);
+
+    // Register components
+    primevue.components.forEach(({ name, val }) => {
+        app.component(name, val);
+    });
+
+    // Register directives
+    primevue.directive.forEach(({ name, val }) => {
+        app.directive(name, val);
+    });
+}
+
 export default primevue;

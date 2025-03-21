@@ -1,1 +1,0 @@
-import{q as a}from"./app-095fd413.js";var e="dashboard";const t={async data(r){return a.post(`${e}/data`,r)},async regions(r=""){return a.get(`${e}/regions`,{params:r})},async seller(r){return a.get(`${e}/seller`,r)}};export{t as D};
