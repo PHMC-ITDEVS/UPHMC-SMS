@@ -5,40 +5,59 @@ export default {
     },
 
     computed: {
+        _cookie_username() {
+            return this.$page.props.username;
+        },
+        
+        _cookie_password() {
+            return this.$page.props.password;
+        },
+
         _app_name() {
             return this.$page.props.appName;
         },
+
         _user() {
             return this.$page.props.auth.user;
         },
+
         _account() {
             return this.$page.props.auth.account;
         },
+
         _role(){
             return this.$page.props.auth.user.role_name;
         },
+
         _is_auth_seller(){
             return this.$page.props.auth.user.role_name=='SELLER' ? true : false;
         },
+
         _is_auth_bir(){
             return this.$page.props.auth.user.role_name=='BIR' ? true : false;
         },
+
         _auth_region(){
             let regions = this.$page.props.auth.account.region.map(e=> e.region);
             return (regions[0]) ? regions : [];
         },
+
         _current_date(){
             return moment().format('YYYY-MM-DD');
         },
+
         _max_date(){
             return this.parseDate(new Date());
         },
+
         _hostname()
         {
             return location.protocol + '//' + location.host;
         }
     },
-    mounted(){
+
+    mounted() {
+        
         let id = Math.random().toString(36).slice(2);
         let obj_name = "aid";
         
@@ -380,6 +399,13 @@ export default {
                     denyButton: 'order-1',
                   },
             })
+        },
+
+        removeReplaceUnderscore(text, type = 0) {
+            if(!text) return;
+
+            if (type == 1) return text.replace(/_/g, '-');
+            else return text.replace(/_/g, ' ');
         },
     },
 }

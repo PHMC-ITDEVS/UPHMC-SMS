@@ -1,10 +1,10 @@
+import PrimeVue from 'primevue/config';
+
 /* Theme */
 import Aura from '@primeuix/themes/aura';
 
 /* Icons */
 import 'primeicons/primeicons.css';
-
-import PrimeVue from 'primevue/config';
 
 // PrimeVue Services
 import ConfirmationService from 'primevue/confirmationservice';
@@ -31,6 +31,7 @@ import ProgressBar from 'primevue/progressbar';
 import Password from 'primevue/password';
 import InputText from 'primevue/inputtext';
 import InputNumber from 'primevue/inputnumber';
+import Checkbox from 'primevue/checkbox';
 import Textarea from 'primevue/textarea';
 import Dropdown from 'primevue/dropdown';
 import Calendar from 'primevue/calendar';
@@ -42,6 +43,8 @@ import InputIcon from 'primevue/inputicon';
 import MultiSelect from 'primevue/multiselect';
 import AutoComplete from 'primevue/autocomplete';
 import Timeline from 'primevue/timeline';
+import Popover from 'primevue/popover';
+import FloatLabel from 'primevue/floatlabel';
 
 import Ripple from 'primevue/ripple';
 import Tooltip from 'primevue/tooltip';
@@ -61,6 +64,7 @@ const primevue = {
         { name: "p-input-password", val: Password },
         { name: "p-input-text", val: InputText },
         { name: "p-input-number", val: InputNumber },
+        { name: "p-checkbox", val: Checkbox },
         { name: "p-textarea", val: Textarea },
         { name: "p-dropdown", val: Dropdown },
         { name: "p-datepicker", val: Calendar },
@@ -75,6 +79,9 @@ const primevue = {
         { name: "p-progress-spinner", val: ProgressSpinner },
         { name: "p-autocomplete", val: AutoComplete },
         { name: "p-timeline", val: Timeline },
+        { name: "p-popover", val: Popover },
+        { name: "p-float-lable", val: FloatLabel },
+
     ],
     directive: [
         { name: "ripple", val: Ripple },
@@ -90,9 +97,8 @@ export function setupPrimeVue(app) {
         theme: {
             preset: Aura,
             options: {
-                prefix: 'p',
+                prefix: "",
                 darkModeSelector: false,
-                cssLayer: false
             }
         }
     });

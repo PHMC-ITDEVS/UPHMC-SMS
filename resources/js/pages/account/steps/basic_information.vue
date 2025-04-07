@@ -62,7 +62,7 @@
     </div>
 </template>
 <script>
-    import ImageUpload from '../../../components/ImageUpload';
+    import ImageUpload from '../../../components/image-upload';
 
     export default {
         components : { ImageUpload },

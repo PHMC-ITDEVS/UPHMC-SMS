@@ -1,110 +1,154 @@
 <template>
-    <div>
-        <app-guest>
-            <div class="card shadow-none">
-                <div class="card-body p-3">
-                    <div class="text-center w-100 m-auto">
-                        <div class="auth-logo">
-                            <Link href="/" class="logo logo-dark text-center">
-                                <span class="logo-lg">
-                                <!-- <app-logo /> -->
-                                <!-- <h1>Tax Engine</h1> -->
-                                </span>
-                            </Link>
+    <app-guest>
+        <div class="login-logo"> 
+            <a href="/">
+                <img src="/images/default.png" class="header-brand-img dark-logo" alt="logo">
+            </a> 
+        </div>
+
+        <div class="card mb-0">
+            <div class="card-body">
+                <div class="text-center mb-6">
+                    <h2 class="mb-2">Login</h2>
+                </div>
+
+                <v-form ref="form" as="form">
+                    <p-message class="alert alert-error py-1 mb-2" severity="error" v-text="error_message" v-if="error_message"/>
+                    <v-field slim  class="form-group" as="div" rules="required" name="username" vid="username" v-slot="{ errors }">
+                        <label class="form-label">Username</label>
+                        <p-input-text
+                            type="text"
+                            v-model="form.username"
+                            placeholder="Enter your username"
+                            class="form-control"
+                            :class="{ 'p-invalid': errors[0] }"
+                            @keyup.enter="login"
+                            @click.prevent="removeErrorMesasge"
+                        />
+                        <small class="p-error">{{ errors[0] }}</small>
+                    </v-field>
+                    
+                    <v-field slim class="form-group" as="div" name="password" vid="password" v-slot="{ errors }">
+                        <label class="form-label">Password</label>
+                        <p-input-password
+                            class="d-block"
+                            v-model="form.password"
+                            placeholder="Enter your password"
+                            toggleMask
+                            :feedback=false
+                            @keyup.enter="login"
+                            inputClass="form-control"
+                            @click.prevent="removeErrorMesasge"
+                        />
+                    </v-field>
+
+                    <div class="d-flex flex-row align-items-center justify-content-between">
+                        <v-field slim class="form-group mb-0" as="div" name="remember" v-slot="{ errors }">
+                            <label class="d-flex flex-row align-items-center">
+                                <p-checkbox 
+                                    v-model="form.remember" 
+                                    class="mr-1"
+                                    name="remember" 
+                                    :binary="true"
+                                    input-id="remember"
+                                />
+                                <span class="text-muted">Remember me</span> 
+                            </label>
+                        </v-field>
+
+                        <div class="form-group mb-0"> 
+                            <a href="/forgot-password" class="text-muted">Forgot password?</a> 
                         </div>
-                        <p class="text-muted mb-2 mt-2">Enter your username and password <br>to access admin panel.</p>
                     </div>
 
-                    <v-form ref="form" as="form">
-                        <alert-errors :form="form" message="There were some problems with your input."></alert-errors>
-                        <v-field slim  class="form-group" as="div" rules="required" name="username" vid="username" v-slot="{ errors }">
-                            <label class="tx-10 tx-uppercase tx-medium tx-spacing-1 mg-b-5 tx-color-03">Username</label>
-                                <p-input-text
-                                    type="text"
-                                    v-model="form.username"
-                                    placeholder="Enter your username"
-                                    class="form-control shadow-none"
-                                    :class="{ 'p-invalid': errors[0] }"
-                                    @keyup.enter="login"
-                                />
-                                <small class="p-error">{{ errors[0] }}</small>
-                        </v-field>
-                        
-                        <v-field slim class="form-group mt-2" as="div" name="password" vid="password" v-slot="{ errors }">
-                            <label>Password</label>
-                            <p-input-password
-                                class="d-block"
-                                v-model="form.password"
-                                placeholder="Enter your password"
-                                toggleMask
-                                :feedback=false
-                                @keyup.enter="login"
-                                inputClass="form-control"
-                            />
-                        </v-field>
-
-                        <div class="text-center d-grid mt-2">
-                            <p-button
-                            type="submit"
-                            label="Log in"
+                    <div class="mt-5"> 
+                        <p-button 
+                            class="btn btn-lg btn-primary btn-block"
+                            label="Login"
                             :disabled="disabled_login"
-                            class="btn btn-primary"
-                            @click="login"
-                            />
-                        </div>
-                    </v-form>
-                </div> <!-- end card-body -->
+                            @keyup.enter="login"
+                            @click.prevent="login()"
+                        />
+                    </div>
+
+                    <div class="text-center mt-7 mb-5">
+                        <div class="font-weight-normal fs-16 text-muted">You Don't have an account <a class="btn-link font-weight-normal" href="/register">Register Here</a></div>
+                    </div>
+
+                </v-form>
             </div>
-        </app-guest>
-    </div>
+        </div>
+    </app-guest>
 </template>
 
 <script>
-import AuthService  from '../../services/auth';
+    import AuthService  from '../../services/auth';
 
-export default {
-  components: { },
-  data() {
-    return {
-      valid: false,
-      loading:false,
-      form: new Form({
-          username: "",
-          password: "",
-      })
+    export default {
+        data() {
+            return {
+                valid: false,
+                loading:false,
+                error_message:null,
+                form: new Form({
+                    username: null,
+                    password: null,
+                    remember: false
+                })
+            };
+        },
+
+        mounted() {
+            this.fillInfo();
+        },
+
+        methods: {
+            login() { 
+                if (this.loading) return;
+                
+                this.loading = true;
+                AuthService.login(this.form)
+                .then((response) => {
+                    this.router.visit("/");
+                })
+                .catch((errors) => {
+                    console.log(errors);
+                    
+                    try { 
+                        this.error_message = errors.response.data.message;
+                    }
+                    catch(ex) {
+                        console.log(ex)
+                    }
+                    this.loading = false;
+                })
+            },
+
+            fillInfo() {
+                if(this._cookie_username && this._cookie_password) {
+                    this.form.username = this._cookie_username
+                    this.form.password = this._cookie_password;
+                    this.form.remember = true;
+                }
+            },
+
+            removeErrorMesasge() {
+                this.error_message = null;
+            }
+        },
+
+        computed:{
+            disabled_login() {
+                if (this.loading) return true;
+                return !(this.form.username && this.form.username.length > 0 && this.form.password && this.form.password.length > 0);
+            }
+        }
     };
-  },
-  computed:{
-    disabled_login() {
-      // return false;
-      if (this.loading) return true;
-      return (this.form.username.length > 0 && this.form.password.length > 0) ? false : true;
-    }
-  },
-  methods: {
-    login() { 
-      // this.form.reset();
-      if (this.loading) return;
-      this.loading = true;
-      AuthService.login(this.form)
-        .then((response) => {
-          this.router.visit("/");
-          document.body.classList.remove("authentication-bg");
-        })
-        .catch((errors) => {
-            try { 
-              // this.form.errors = this.getError(errors); 
-              this.$refs.form.setErrors(this.getError(errors));
-            }
-            catch(ex){
-              console.log(ex)
-            }
-            this.loading = false;
-        })
-    }
-  },
-  mounted() {
-    document.body.classList.add("authentication-bg");
-  }
-};
 </script>
+<style scoped>
+    .login-logo {
+        margin: 0 auto;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+</style>

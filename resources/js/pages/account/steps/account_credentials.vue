@@ -1,109 +1,75 @@
 <template>
-    <div>
-        <div class="col-12">
-            <h3 class="mb-4">Account Credential</h3>
-        </div>
-
+    <div class="d-flex flex-wrap flex-column">
         <div class="field">
-            <div class="p-float-label">
-                <p-dropdown
-                    v-model="role"
-                    inputId="role"
-                    :options='["ADMIN", "BIR", "DSP","SELLER", "RDO"]'
-                    class="w-full"
-                />
-                <label for="role">Role</label>
-            </div>
+            <label for="role">Role</label>
+            <p-dropdown
+                v-model="role"
+                inputId="role"
+                :options='["ADMIN"]'
+                inputClass="w-full"
+            />
         </div>
 
-        <v-field  v-if="role=='RDO'" tag="div" class="field" slim rules="required" name="region" vid="region" v-slot="{ errors }">
-            <span class="p-float-label">
-                <p-multiselect 
-                    class="w-100"
-                    :options="region_list"
-                    optionLabel="name"
-                    optionValue="region_code"
-                    display="chip"
-                    v-model="region"
-                    inputClass="form-control shadow-none"
-                    :class="{ 'p-invalid': errors[0] }"
-                />
-                <label for="role">Region</label>
-                <small class="p-error">{{ errors[0] }}</small>
-            </span>
-        </v-field>
-
-        <!-- User Credentials -->
-
-        <v-field as="div" class="field" slim rules="required" name="email" vid="email" v-slot="{ errors }">
-            <span class="p-float-label">
-                <p-input-text
-                    id="email"
-                    type="text"
-                    v-model="email"
-                    class="form-control shadow-none"
-                    maxlength="50"
-                    :class="{ 'p-invalid': errors[0] }"
-                />
-                <label for="email">Email address</label>
-            </span>
+        <v-field as="div" class="field" slim rules="required" name="email" v-slot="{ errors }">
+            <label for="email">Email address</label>
+            <p-input-text
+                id="email"
+                type="text"
+                v-model="email"
+                class="form-control shadow-none"
+                maxlength="50"
+                :class="{ 'p-invalid': errors[0] }"
+            />
             <small class="p-error">{{ errors[0] }}</small>
         </v-field>
 
-        <v-field as="div" class="field" slim rules="required" name="username" vid="username" v-slot="{ errors }">
-            <span class="p-float-label">
-                <p-input-text
-                    id="username"
-                    type="text"
-                    v-model="username"
-                    class="form-control shadow-none"
-                    maxlength="50"
-                    :class="{ 'p-invalid': errors[0] }"
-                />
-                <label for="username">Username</label>
-            </span>
+        <v-field as="div" class="field" slim rules="required" name="username" v-slot="{ errors }">
+            <label for="username">Username</label>
+            <p-input-text
+                id="username"
+                type="text"
+                v-model="username"
+                class="form-control shadow-none"
+                maxlength="50"
+                :class="{ 'p-invalid': errors[0] }"
+            />
             <small class="p-error">{{ errors[0] }}</small>
         </v-field>
         
-        <v-field as="div" class="field" slim name="password" vid="password" v-slot="{ errors }">
-            <span class="p-float-label">
-                <p-input-password
-                    id="password"
-                    v-model="password"
-                    toggleMask
-                    :feedback=false
-                    maxlength="50"
-                    :inputClass="{
-                        'form-control shadow-none': !0,
-                        'p-invalid': errors[0]
-                    }"
-                />
-                <label for="password">Password</label>
-            </span>
+        <v-field as="div" class="field" name="password" v-slot="{ errors }">
+            <label for="password">Password</label> 
+            <p-input-password
+                id="password"
+                v-model="password"
+                toggleMask
+                :feedback=false
+                :class="{ 'p-invalid': errors[0] }"
+                maxlength="50"
+                class="w-100"
+                inputClass="form-control shadow-none"
+            />
+            
             <small class="p-error">{{ errors[0] }}</small>
         </v-field>
 
-        <v-field v-if="password" tag="div" class="field" slim name="confirm_password" vid="confirm_password" v-slot="{ errors }">
-            <span class="p-float-label">
-                <p-input-password
-                    id="confirm_password"
-                    v-model="confirm_password"
-                    toggleMask
-                    :feedback=false
-                    maxlength="50"
-                    :inputClass="{
-                        'form-control shadow-none': !0,
-                        'p-invalid': errors[0]
-                    }"
-                />
-                <label for="confirm_password">Confirm Password</label>
-            </span>
+        <v-field as="div" class="field" name="confirm_password" v-slot="{ errors }" v-if="password">
+            <label for="confirm_password">Confirm Password</label>
+            <p-input-password
+                id="confirm_password"
+                v-model="confirm_password"
+                toggleMask
+                :feedback=false
+                maxlength="50"
+                :class="{ 'p-invalid': errors[0] }"
+                class="w-100"
+                inputClass="form-control shadow-none"
+            />
             <small class="p-error">{{ errors[0] }}</small>
         </v-field>
     </div>
 </template>
 <script>
-    import ImageUpload from '../../../components/ImageUpload';
+    import ImageUpload from '../../../components/image-upload';
 
     export default {
         components : { ImageUpload },
@@ -147,10 +113,6 @@
 
         mounted() {
             this.fillInfo();
-
-            axios.get(route("region.list"), {}).then(e=>{
-                this.region_list =e.data.data;
-            });
         },
 
         watch: {

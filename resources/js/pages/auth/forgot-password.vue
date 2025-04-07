@@ -41,12 +41,11 @@
 </template>
 
 <script>
-import ApplicationLogo from "../../components/ApplicationLogo.vue";
+
 export default {
   props: {
     status: String,
   },
-  components: { ApplicationLogo },
   data() {
     return {
       showPassword: false,

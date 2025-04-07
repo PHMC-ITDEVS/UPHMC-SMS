@@ -1,12 +1,12 @@
 /* Custom Components */
-import Breadcrumbs from '@/components/Breadcrumbs';
-import ApplicationLogo from '@/components/ApplicationLogo';
-import LoaderModal from '@/components/LoaderModal';
-import FormWizard from '@/components/WizardForm';
+import Breadcrumbs from '@/components/breadcrumbs';
+import ApplicationLogo from '@/components/application-logo';
+import LoaderModal from '@/components/loader-modal';
+import FormWizard from '@/components/wizard-form';
 
 /* Custom Layouts */
-import GuestLayout from '@/layouts/GuestLayout';
-import AdminLayout from '@/layouts/AdminLayout';
+import GuestLayout from '@/layouts/guest-layout';
+import AdminLayout from '@/layouts/admin-layout';
 
 /*other packages*/
 import { CountTo }  from 'vue3-count-to';

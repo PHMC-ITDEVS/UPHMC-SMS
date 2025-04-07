@@ -78,11 +78,8 @@
   </template>
   
   <script>
-  import ApplicationLogo from "../../components/ApplicationLogo.vue";
-  import GuestLayout from "../../layouts/GuestLayout.vue"
   
   export default {
-    components: { ApplicationLogo, GuestLayout },
     data() {
       return {
         valid:false,

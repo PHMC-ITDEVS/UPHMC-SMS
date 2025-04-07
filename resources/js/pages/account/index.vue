@@ -1,336 +1,310 @@
 <template>
-  <div>
-    <app-layout>
-      <app-breadcrumb
-        :title="page.title"
-        :links="breadcrumbs"
-      ></app-breadcrumb>
+    <div>
+        <app-layout>
+            <app-breadcrumb
+                :title="page.title"
+                :links="breadcrumbs"
+            ></app-breadcrumb>
 
-      <div class="row">
-        <div class="col-lg-12">
-          <p-card class="shadow-none card">
-            <template #content>
-              <div class="d-flex flex-wrap align-items-center mt-3 mb-3">
-                <div class="col-12 col-md-6 mb-2">
-                  <p-button
-                    class="btn btn-primary"
-                    label="New"
-                    icon="pi pi-plus"
-                    @click="create"
-                  />
-                </div>
-                <div class="col-12 col-md-3 ms-auto">
-                  <span class="p-float-label p-input-icon-right">
-                    <i class="pi pi-search" />
-                    <p-input-text
-                      id="search"
-                      type="text"
-                      v-model="table.params.search"
-                      class="form-control shadow-none"
-                    />
-                    <label for="search">Search</label>
-                  </span>
-                </div>
-              </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="search-set">
+                            <div class="search-field w-30">
+                                <p-input-text
+                                    v-model="table.params.search"
+                                    class="form-control shadow-none"
+                                    placeholder="Search"
+                                />
+                                <i class="search-icon pi pi-search" />
+                            </div>
+                            <div class="button-container">
+                                <p-button
+                                    class="btn btn-primary"
+                                    label="Add Account"
+                                    icon="pi pi-plus"
+                                    @click="create"
+                                />
+                            </div>
+                        </div>
 
-              <div class="table-responsive mb-3">
-                <p-table
-                  tableClass="table table-fit-column-1"
-                  :rowHover="true"
-                  :loading="table.loading"
-                  :value="table.data"
-                  showGridlines
-                  responsiveLayout="scroll"
-                >
-                    <template #empty>No records found.</template>
-                    <template #loading>Loading data. Please wait.</template>
-                    <p-column>
-                      <template #body="{data}">
-                        <p-button
-                          class="btn btn-sm btn-warning"
-                          icon="pi pi-pencil"
-                          @click="viewData(data)"
-                        />
-                        <p-button
-                          class="btn btn-sm btn-danger"
-                          icon="pi pi-times"
-                          @click="deleteData(data)"
-                        />
-                      </template>
-                    </p-column>
-                    <p-column field="id" header="No."></p-column>
-                    <p-column header="Name">
-                      <template #body="{data}">
-                        {{ `${ data.first_name ? data.first_name : "" } ${ data.last_name ? data.last_name : "" }` }}
-                      </template>
-                    </p-column>
-                    <p-column header="Username">
-                      <template #body="{data}">
-                        {{ data.user.username }}
-                      </template>
-                    </p-column>
-                    <p-column header="Email">
-                      <template #body="{data}">
-                        {{ data.user.email.toLowerCase() }}
-                      </template>
-                    </p-column>
-                    <p-column header="Position">
-                      <template #body="{data}">
-                        {{ data.user.role_name }}
-                      </template>
-                    </p-column>
-                    <p-column field="created_at" header="Date Created"></p-column>
-                    
-                </p-table>
-                <p-paginator :rows="10" :totalRecords="table.total" @page="onPage($event)"></p-paginator>
-              </div>
+                        <div class="table-responsive mb-3 p-3">
+                            <p-table
+                                :rowHover="true"
+                                :loading="table.loading"
+                                :value="table.data"
+                                responsiveLayout="scroll"
+                            >
+                                <template #empty>No records found.</template>
+                                <template #loading>Loading data. Please wait.</template>
+                                <p-column>
+                                    <template #body="{data}">
+                                        <p-button
+                                        class="btn btn-sm btn-warning"
+                                        icon="pi pi-pencil"
+                                        @click="viewData(data)"
+                                        />
+                                        <p-button
+                                        class="btn btn-sm btn-danger"
+                                        icon="pi pi-times"
+                                        @click="deleteData(data)"
+                                        />
+                                    </template>
+                                </p-column>
+                                <p-column field="id" header="No."></p-column>
+                                <p-column header="Name">
+                                    <template #body="{data}">
+                                        {{ `${ data.first_name ? data.first_name : "" } ${ data.last_name ? data.last_name : "" }` }}
+                                    </template>
+                                </p-column>
+                                <p-column header="Username">
+                                    <template #body="{data}">
+                                        {{ data.user.username }}
+                                    </template>
+                                </p-column>
+                                <p-column header="Email">
+                                    <template #body="{data}">
+                                        {{ data.user.email.toLowerCase() }}
+                                    </template>
+                                </p-column>
+                                <p-column header="Position">
+                                    <template #body="{data}">
+                                        {{ data.user.role_name }}
+                                    </template>
+                                </p-column>
+                                <p-column field="created_at" header="Date Created"></p-column>
+                            </p-table>
+                        </div>
+
+                        <p-paginator
+                            v-if="table.total > 0"
+                            v-model:first="table.first"
+                            @page="onPaginate"
+                            :template="{
+                                '640px': 'PrevPageLink CurrentPageReport NextPageLink',
+                                default: 'FirstPageLink PrevPageLink CurrentPageReport PageLinks NextPageLink LastPageLink'
+                            }"
+                            :totalRecords="table.total"
+                            :rows="table.params.limit"
+                        >
+                            <template #start>
+                                <h5 class="mb-0">Showing {{ table.from }} to {{ table.to }} out of {{ table.total }} results</h5>
+                            </template>
+                        </p-paginator>
+                    </div> 
+                </div> <!-- end col -->
+            </div>
+        </app-layout>
+
+        <p-dialog
+            modal
+            class="account-modal"
+            v-model:visible="dialog.show"
+            :style="{
+                'width': '100%',
+                'max-width': '500px'
+            }"
+        >
+            <template #header>
+                <h3 v-text="dialog.title"></h3>
             </template>
-          </p-card> <!-- end card -->
-        </div> <!-- end col -->
-      </div>
-    </app-layout>
+            
+            <AccountForm @success="successEvent" :item="dialog.form" @close="dialog.show = !1" v-if="!dialog.loading"/>
 
-    <p-dialog
-      class="account-modal modal"
-      v-model:visible="dialog.show"
-      :style="{
-        width: '100%',
-        'max-width': '700px'
-      }"
-      modal
-    >
-      <template #header>
-        <h3 v-text="dialog.title"></h3>
-      </template>
-      
-      <div>
-        <AccountForm @hideModal="successEvent" :item="dialog.data"/>
-      </div>
-    
-      <template #footer></template>
-    </p-dialog>
+            <div class="skeleton-cont" v-else>
+                <p-skeleton class="mt-5 mb-4" height="1.3rem" borderRadius="16px"></p-skeleton>
+                <p-skeleton height="1.5rem" width="10rem" class="mb-4" borderRadius="16px"></p-skeleton>
 
-    <p-toast />
-    <p-confirm></p-confirm>
-  </div>
+                <p-skeleton width="5rem" class="mb-2" borderRadius="16px"></p-skeleton>
+                <p-skeleton height="2.25rem" class="mb-4"></p-skeleton>
+
+                <p-skeleton width="5rem" class="mb-2" borderRadius="16px"></p-skeleton>
+                <p-skeleton height="2.25rem" class="mb-4"></p-skeleton>
+
+                <div class="d-flex flex-row justify-content-between mt-6">
+                    <p-skeleton width="5rem" height="2.25rem"></p-skeleton>
+                    <p-skeleton width="5rem" height="2.25rem"></p-skeleton>
+                </div>
+            </div>
+        </p-dialog>
+
+        <p-toast />
+        <p-confirm></p-confirm>
+    </div>
 </template>
   
 <script>
-import AccountForm from './form';
-import AccountService  from '../../services/account';
+    import AccountForm from './form';
+    import AccountService  from '../../services/account';
 
-export default {
-  // props: ["items"],
-  components: { AccountForm },
+    export default {
+        components: { AccountForm },
+        data() {
+            return {
+                breadcrumbs: [
+                    { current: false, title: 'Home', url: 'dashboard' }
+                ],
 
-  data() {
-    return {
-      page: {
-        title: "Accounts",
-        route: "account",
-        interval: null
-      },
-      table: {
-          params: {
-              search: "",
-              page: 1,
-          },
-          loading: false,
-          data: [],
-          total: 0,
-          total_pages: 0,
-      },
-      dialog: {
-        title: "",
-        show:false,
-        processing:false,
-        data: new Form({
-          id: null,
-          uid: null,
-          first_name: null,
-          middle_name: null,
-          last_name: null,
-          role: "DSP",
-          username: null,
-          password: null,
-          verify_password: null,
-          email: null,
-          avatar: null,
-          new_image: null,
-          service_provider: [],
-          region:[],
-        })
-      },
-      breadcrumbs: [
-        { current: false, title: 'Home', url: 'dashboard' }
-      ],
-      isLoading: false
-    }
-  },
+                page: {
+                    title: "Accounts",
+                    route: "account",
+                    interval: null
+                },
 
-  computed: {
+                table: {
+                    loading: !1,
+                    data: [],
+                    first: null,
+                    total: 0,
+                    total_pages: 0,
+                    current_page:1,
+                    params: {
+                        search: "",
+                        page: 1,
+                    },
+                },
 
-    dialogSave() {
-      return (this.dialog.data.role=='DSP' && this.dialog.data.stepper==2) || (this.dialog.data.role!='DSP' && this.dialog.data.stepper==1) ? true : false;
-    },
+                dialog: {
+                    title: "",
+                    show:!1,
+                    loading: !1,
+                    form_template: {
+                        id: null,
+                        first_name: null,
+                        middle_name: null,
+                        last_name: null,
+                        username: null,
+                        password: null,
+                        confirm_password: null,
+                        email: null,
+                        avatar: null,
+                        image: null
+                    },
+                    form: new Form({}),
+                }
+            }
+        },
 
-    dialogNext() {
-      return (this.dialog.data.role=='DSP' && this.dialog.data.stepper!=2) ? true : false;
-    },
+        computed: {
+        },
+    
+        mounted(){
+            this.breadcrumbs.push({
+                current: true,
+                title: this.page.title,
+                url: `${this.page.route}`
+            });
 
-    dialogInformationError() {
-      return (this.dialog.data.errors.password || 
-        this.dialog.data.errors.email || 
-        this.dialog.data.errors.username
-      ) ? false : true;
-    },
+            this.getTableData(1);
+        },
 
-    dialogServiceProviderError() {
-      return this.dialog.data.errors.service_provider ? false : true;
-    }
-  },
+        methods: {
+            onPaginate(e) {
+                if(this.table.loading) return;
+                this.table.current_page = e.page + 1;
+                this.getTableData(this.table.current_page);
+            },
+            
+            getTableData(page) {
+                if (this.table.loading) return;
+                this.table.loading = true;
 
-  watch: {
-    "table.params.search": function (val) {
-      this.updateTable();
-    }
-  },
+                AccountService.list(this.table.params)
+                .then((response) => {
+                    let data = response.data.data;
+                    this.table.data = data.data;
+                    this.table.total = data.total;
+                    this.table.total_pages = data.last_page;
+                    this.table.from = data.from;
+                    this.table.to = data.to;
 
-  mounted(){
-    this.breadcrumbs.push({
-      current: true,
-      title: this.page.title,
-      url: `${this.page.route}`
-    });
+                    if (page==1) this.table.first = 0;
+                })
+                .catch((errors) => {
+                    try { 
+                        this.getError(errors);
+                    }
+                    catch(ex){ console.log(ex)}
+                })
+                .finally(() => {
+                    this.table.loading = false;
+                });
+            },
 
-    this.updateTable();
-  },
+            create() {
+                this.dialog.form = this.dialog.form_template;
+                this.dialog.loading = !1;
+                this.dialog.title = "Create";
+                this.dialog.show = !0;
+                // this.dialog.form.reset();
+            },
 
-  methods: {
-    onPage(val){
-      this.table.params.page = val.page+1;
-      this.updateTable();
-    },
-    updateTable() {
-      if (this.table.loading) return;
-      this.table.loading = true;
+            deleteData(item){
+                this.$confirm.require({
+                    message: 'Are you sure to delete this record?',
+                    header: 'Delete Confirmation',
+                    icon: 'pi pi-info-circle',
+                    acceptClass: 'p-button-danger btn btn-light',
+                    rejectClass: 'p-button-danger btn btn-danger',
+                    accept: () => {
+                    AccountService.remove(item.account_number)
+                    .then((response) => {
+                        this.swalMessage("success",response.data.message,"Okay",false,false,false);
+                        this.getTableData(this.table.current_page);
+                    })
+                    .catch((errors) => {
+                        try { 
+                            this.getError(errors);
+                        }
+                        catch(ex){ console.log(ex)}
+                    })
+                    .finally(() => {});
+                    }
+                });
+            },
 
-      AccountService.list(this.table.params)
-      .then((response) => {
-        this.table.data = response.data.data.data;
-        this.table.total = response.data.data.total;
-        this.table.total_pages = response.data.data.last_page;
-      })
-      .catch((errors) => {
-          try { 
-            this.getError(errors);
-          }
-          catch(ex){ console.log(ex)}
-      })
-      .finally(() => {
-        this.table.loading = false;
-      });
-    },
+            viewData(item){
+            this.dialog.title = "Update account";
+            this.dialog.data.reset();
+            // this.dialog.data.clearErrors();
 
-    create() {
-      this.dialog.title = "Create account";
-      this.dialog.data.stepper = 1;
-      this.dialog.data.reset();
-      // this.dialog.data.clearErrors();
-      this.dialog.show = true;
-    },
+            AccountService.get(item.account_number)
+            .then((response) => {
+                let data = response.data.data;
+                this.dialog.data.stepper = 1;
+                this.dialog.data.id = data.account_number; 
+                this.dialog.data.uid = data.user.id;
+                this.dialog.data.first_name = data.first_name;
+                this.dialog.data.middle_name = data.middle_name;
+                this.dialog.data.last_name = data.last_name;
+                this.dialog.data.role = data.user.role_name;
+                this.dialog.data.username = data.user.username;
+                this.dialog.data.email = data.user.email;
+                this.dialog.data.avatar = data.avatar;
+                this.dialog.data.password = null;
+                this.dialog.data.region = data.region.map(e=> e.region_code);
+                this.dialog.data.service_provider = (data.service_provider) ? data.service_provider : [];
+                this.dialog.show = true;
+            })
+            .catch((errors) => {
+                try { 
+                    this.getError(errors);
+                }
+                catch(ex){ console.log(ex)}
+            })
+            .finally(() => {});
+            },
 
-    deleteData(item){
-      
-      this.$confirm.require({
-        message: 'Are you sure to delete this record?',
-        header: 'Delete Confirmation',
-        icon: 'pi pi-info-circle',
-        acceptClass: 'p-button-danger btn btn-light',
-        rejectClass: 'p-button-danger btn btn-danger',
-        accept: () => {
-          AccountService.remove(item.account_number)
-          .then((response) => {
-            this.swalMessage("success",response.data.message,"Okay",false,false,false);
-            this.updateTable();
-          })
-          .catch((errors) => {
-              try { 
-                this.getError(errors);
-              }
-              catch(ex){ console.log(ex)}
-          })
-          .finally(() => {});
+            successEvent() {
+                this.dialog.show = !1;
+                this.getTableData(1);
+            }
+        },
+
+        watch: {
+            "table.params.search": function (val) {
+                this.getTableData(1);
+            }
         }
-      });
-    },
-
-    viewData(item){
-      this.dialog.title = "Update account";
-      this.dialog.data.reset();
-      // this.dialog.data.clearErrors();
-
-      AccountService.get(item.account_number)
-      .then((response) => {
-        let data = response.data.data;
-        this.dialog.data.stepper = 1;
-        this.dialog.data.id = data.account_number; 
-        this.dialog.data.uid = data.user.id;
-        this.dialog.data.first_name = data.first_name;
-        this.dialog.data.middle_name = data.middle_name;
-        this.dialog.data.last_name = data.last_name;
-        this.dialog.data.role = data.user.role_name;
-        this.dialog.data.username = data.user.username;
-        this.dialog.data.email = data.user.email;
-        this.dialog.data.avatar = data.avatar;
-        this.dialog.data.password = null;
-        this.dialog.data.region = data.region.map(e=> e.region_code);
-        this.dialog.data.service_provider = (data.service_provider) ? data.service_provider : [];
-        this.dialog.show = true;
-      })
-      .catch((errors) => {
-          try { 
-            this.getError(errors);
-          }
-          catch(ex){ console.log(ex)}
-      })
-      .finally(() => {});
-    },
-
-    setSelectedImage(val) {
-      this.dialog.data.new_image = val;
-    },
-
-    deleteDialogDSP(item) {
-      this.dialog.data.service_provider = this.dialog.data.service_provider.filter(e=> e.service_provider_id!=item.service_provider_id);
-    },
-
-    nextDialogStepper() {
-      this.dialog.data.stepper = Number(this.dialog.data.stepper) + 1;
-    },
-
-    backDialogStepper() {
-      this.dialog.data.stepper = Number(this.dialog.data.stepper) - 1;
-    },
-
-    setSelectedProvider(item) {
-      this.dialog_dsp.show = false;
-      console.log(item);
-      if(this.dialog.data.service_provider.some(e=> e.service_provider_id==item.id))
-        this.$toast.error("Service Provider already exist");
-      else
-        this.dialog.data.service_provider.push({account_id:null, service_provider_id:item.id,data:item});
-    },
-
-    successEvent() {
-      this.dialog.show = !this.dialog.show;
-      this.updateTable();
-      // this.$toast.add({ severity: 'success', summary: 'Success!', detail: 'Blotter report created successfully', life: 3000 });
-    },
-  },
-
-  beforeUnmount() {
-    clearInterval(this.page.interval);
-  }
-};
+    };
 </script>
