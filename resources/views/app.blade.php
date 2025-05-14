@@ -18,7 +18,7 @@
         <link href="{{ asset('zendash/plugins/bootstrap/css/bootstrap.css') }}" rel="stylesheet" />
 
         {{-- Icons --}}
-        <link href="{{ asset('zendash/icons/materialdesignicons/materialdesignicons.css') }}" rel="stylesheet" />
+       <link href="{{ asset('zendash/css/icons.css') }}" rel="stylesheet" />
 
         {{-- Stylings --}}
         <link href="{{ asset('zendash/css/style.css') }}" rel="stylesheet" />
@@ -27,7 +27,6 @@
         <link href="{{ asset('zendash/css/animated.css') }}" rel="stylesheet" />
         <link href="{{ asset('zendash/css/sidemenu.css') }}" rel="stylesheet" />
         <link href="{{ asset('zendash/css/style.css') }}" rel="stylesheet" />
-        <link href="{{ asset('zendash/css/icons.css') }}" rel="stylesheet" />
         <link href="{{ asset('css/custom.css') }}" rel="stylesheet" />
 
         @vite(['resources/js/app.js', "resources/js/pages/{$page['component']}.vue"])

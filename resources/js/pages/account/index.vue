@@ -36,22 +36,23 @@
                                 responsiveLayout="scroll"
                             >
                                 <template #empty>No records found.</template>
-                                <template #loading>Loading data. Please wait.</template>
+                                <template #loading><app-loader/></template>
                                 <p-column>
                                     <template #body="{data}">
-                                        <p-button
-                                        class="btn btn-sm btn-warning"
-                                        icon="pi pi-pencil"
-                                        @click.prevent="viewData(data)"
-                                        />
-                                        <p-button
-                                        class="btn btn-sm btn-danger"
-                                        icon="pi pi-times"
-                                        @click="deleteData(data)"
-                                        />
+                                        <div class="d-flex flex-row justify-content-center gap-1">
+                                            <p-button
+                                                class="btn btn-sm btn-warning"
+                                                icon="pi pi-pencil"
+                                                @click.prevent="viewData(data)"
+                                            />
+                                            <p-button
+                                                class="btn btn-sm btn-danger"
+                                                icon="pi pi-times"
+                                                @click="deleteData(data)"
+                                            />
+                                        </div>
                                     </template>
                                 </p-column>
-                                <p-column field="id" header="No."></p-column>
                                 <p-column header="Name">
                                     <template #body="{data}">
                                         {{ `${ data.first_name ? data.first_name : "" } ${ data.last_name ? data.last_name : "" }` }}

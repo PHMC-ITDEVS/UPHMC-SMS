@@ -2,6 +2,7 @@
 import Breadcrumbs from '@/components/breadcrumbs';
 import ApplicationLogo from '@/components/application-logo';
 import LoaderModal from '@/components/loader-modal';
+import Loader from '@/components/loader';
 import FormWizard from '@/components/wizard-form';
 
 /* Custom Layouts */
@@ -22,6 +23,7 @@ const item = {
         { name: "app-logo", val: ApplicationLogo },
         { name: "app-breadcrumb", val: Breadcrumbs },
         { name: "app-loader-modal", val: LoaderModal },
+        { name: "app-loader", val: Loader },
         { name: "app-wizard", val: FormWizard },
 
         { name: "app-guest", val: GuestLayout },

@@ -471,6 +471,10 @@
     color: #e2e8f0 !important;
 }
 
+.p-datatable-mask.p-overlay-mask {
+    background: rgba(255, 255, 255, 0.4) !important;
+}
+
 .p-dialog-header {
     padding: 1rem !important;
 }

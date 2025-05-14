@@ -11,7 +11,7 @@
         </div>
         <p-toast position="top-center"/>
         <footer class="footer footer-alt px-0">
-            2025 &copy; Template by&nbsp;<span href="#!" class="text-dark text-decoration-underline">Sixpent Inc.</span>
+            2025 &copy; Template by&nbsp;<span href="#!" class="text-dark text-decoration-underline">Ferd.</span>
         </footer>
     </div>
 </template>

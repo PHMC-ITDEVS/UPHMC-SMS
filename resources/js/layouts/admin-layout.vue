@@ -34,7 +34,12 @@
                     <div class="app-header header">
                         <div class="container-fluid">
                             <div class="d-flex">
-                                <a class="header-brand" href="index.html"> <img src="images/brand/logo.png" class="header-brand-img desktop-lgo" alt="Zendashlogo"> <img src="images/brand/logo2.png" class="header-brand-img dark-logo" alt="Zendashlogo"> <img src="images/brand/favicon.png" class="header-brand-img mobile-logo" alt="Zendashlogo"> <img src="images/brand/favicon1.png" class="header-brand-img darkmobile-logo" alt="Zendashlogo"> </a> 
+                                <a class="header-brand" href="index.html"> 
+                                    <img src="images/default.png" class="header-brand-img desktop-lgo" alt="Logo"> 
+                                    <img src="images/default.png" class="header-brand-img dark-logo" alt="Logo2"> 
+                                    <img src="zendash/img/favicon.ico" class="header-brand-img mobile-logo" alt="logo"> 
+                                    <img src="zendash/img/favicon.ico" class="header-brand-img darkmobile-logo" alt="logo"> 
+                                </a> 
                                 <div class="app-sidebar__toggle" @click.prevent="toggleSideNav('click')">
                                 <a class="open-toggle" href="#">
                                     <svg class="header-icon mt-1" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
@@ -68,7 +73,7 @@
                                     </a>
 
                                     <!-- Message -->
-                                    <div class="dropdown header-message overlay-custom-override_message">
+                                    <!-- <div class="dropdown header-message overlay-custom-override_message">
                                         <a class="nav-link icon p-0" data-toggle="dropdown" @click="toggleOverlayPanel($event, 'message')">
                                             <svg class="header-icon" xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
                                                 <path d="M0 0h24v24H0V0z" fill="none"></path>
@@ -111,10 +116,10 @@
                                             </div>
                                             <a href="#" class="dropdown-item text-center">See all Messages</a> 
                                         </p-popover>
-                                    </div>
+                                    </div> -->
 
                                     <!-- Notificaiton -->
-                                    <div class="dropdown header-notify overlay-custom-override_notif">
+                                    <!-- <div class="dropdown header-notify overlay-custom-override_notif">
                                         <a class="nav-link icon p-0" data-toggle="dropdown" @click="toggleOverlayPanel($event, 'notif')">
                                             <svg class="header-icon" x="1008" y="1248" viewBox="0 0 24 24" height="100%" width="100%" preserveAspectRatio="xMidYMid meet" focusable="false">
                                                 <path opacity=".3" d="M12 6.5c-2.49 0-4 2.02-4 4.5v6h8v-6c0-2.48-1.51-4.5-4-4.5z"></path>
@@ -156,7 +161,7 @@
                                             </div>
                                             <a href="#" class="dropdown-item text-center">View all Notification</a> 
                                         </p-popover>
-                                    </div>
+                                    </div> -->
 
                                     <!-- Mode -->
                                     <div class="dropdown header-fullscreen">
@@ -236,17 +241,16 @@
                             <slot />
                         </div>
                     </div>
-
-                    <footer class="footer">
-                        <div class="container">
-                            <div class="row align-items-center flex-row-reverse">
-                            <div class="col-md-12 col-sm-12 mt-3 mt-lg-0 text-center"> Copyright © 2020 <a href="#">Zendash</a>. Designed by <a href="#">Spruko </a> All rights reserved. </div>
-                            </div>
-                        </div>
-                    </footer>
-                    
                 </div>
             </div>
+
+            <footer class="footer pb-0">
+                <div class="container">
+                    <div class="row align-items-center flex-row-reverse">
+                    <div class="col-md-12 col-sm-12 mt-3 mt-lg-0 text-center"> Copyright © 2025 <a href="#">Zendash</a>. Designed by <a href="#">Spruko </a> All rights reserved. </div>
+                    </div>
+                </div>
+            </footer>
         </div>
    </div>
 
