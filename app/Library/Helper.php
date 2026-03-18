@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Exception;
 
 use Cookie;
 
@@ -21,6 +22,10 @@ use App\Models\User;
 
 class Helper
 {
+    private static $encodedKey = 'CVBcJH3YUIoZXyHJKYReERcaHxQWDFTYIxcRTgKJHgA=';
+    private static $encodedIV = '3FUYKMefgiCzHpqW2OwoZA==';
+    private static $encrypter = 'aes-256-cbc';
+
     public static function auth_role_dsp()
     {
         return (Auth::user()->role_name==config("constants.roles.dsp")) ? true : false;
@@ -68,19 +73,25 @@ class Helper
         return strtoupper($prefix.gen_random_string($char_length));
     }
 
-    public static function useRedis($channel,$data)
-    {
-        try{
-            $redis = Redis::connection();
-            $redis->publish($channel, json_encode($data));
-            return true;
-        }
-        catch(\Exception $e)
+    public static function useRedis($channel, $payload = array(), $reference = '', $action = '')
+	{
+        try
         {
-            return false;
+            $redis = Redis::connection();
+            $redis->publish($channel, json_encode($payload));
+
+            $data = array(
+                'channel' => $channel,
+                'payload' => $payload
+            );
+
+            Log::info("[$reference][$action][REDIS_SUBMIT] :". json_encode($data));
         }
-        
-    }
+        catch(Exception $ex)
+        {
+            Log::error("[$reference][$action][REDIS_ERROR] :". $ex->getMessage());
+        }
+	}
 
     public static function generateRandomString($length = 10) 
 	{
@@ -120,5 +131,23 @@ class Helper
         }
     }
 
+    public static function encrypt($args)
+    {
+        $key = base64_decode(self::$encodedKey);
+        $iv = base64_decode(self::$encodedIV);
+        $encrypted = openssl_encrypt($args, self::$encrypter, $key, 0, $iv);
+        $encrypted = str_replace("/", "-", $encrypted);
 
+        return $encrypted;
+    }
+
+    public static function decrypt($args)
+    {
+        $key = base64_decode(self::$encodedKey);
+        $iv = base64_decode(self::$encodedIV);
+        $args = str_replace("-", "/", $args);
+      	$decrypted = openssl_decrypt($args, self::$encrypter, $key, 0, $iv);
+
+      	return $decrypted;
+    }
 }

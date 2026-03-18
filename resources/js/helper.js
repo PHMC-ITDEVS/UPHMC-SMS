@@ -29,17 +29,8 @@ export default {
             return this.$page.props.auth.user.role_name;
         },
 
-        _is_auth_seller(){
-            return this.$page.props.auth.user.role_name=='SELLER' ? true : false;
-        },
-
-        _is_auth_bir(){
-            return this.$page.props.auth.user.role_name=='BIR' ? true : false;
-        },
-
-        _auth_region(){
-            let regions = this.$page.props.auth.account.region.map(e=> e.region);
-            return (regions[0]) ? regions : [];
+        _is_admin(){
+            return this.$page.props.auth.user.role_name == 'admin';
         },
 
         _current_date(){
@@ -241,25 +232,29 @@ export default {
         {
             return this._user.role_name;
         },
-        auth_role_dsp()
-        {
-            return (this._user.role_name=="DSP") ? true : false;
-        },
+        
         auth_role_admin()
         {
             return (this._user.role_name=="ADMIN") ? true : false;
         },
-        auth_role_bir()
-        {
-            return (this._user.role_name=="BIR") ? true : false;
-        },
-        auth_role_rdo()
-        {
-            return (this._user.role_name=="RDO") ? true : false;
-        },
+       
         auth_fullname()
         {
-            return `${this.uppercase(this._account.first_name)} ${this.uppercase(this._account.last_name)}`;
+            return [
+                this.uppercase(this._account.first_name),
+                this.uppercase(this._account.middle_name),
+                this.uppercase(this._account.last_name)
+            ]
+            .filter(Boolean)
+            .join(' ');
+        },
+
+        auth_position()
+        {
+            let pos = this._user.position_name;
+
+            if(!pos) pos = this._user.role_name;
+            return pos;
         },
 
         uppercase(str) {
@@ -312,14 +307,13 @@ export default {
         },
 
         getError(error, render_bad_request=false)  {
-            console.log(error)
             const error_message = import.meta.env.VITE_DEFAULT_ERROR_MESSAGE;
 
-            if(import.meta.env.VITE_APP_DEBUG) {
-                console.log(error.response.data);
-                console.log(error.response.status);
-                console.log(error.response.headers);
-            }
+            // if(import.meta.env.VITE_APP_DEBUG) {
+            //     console.log(error.response.data);
+            //     console.log(error.response.status);
+            //     console.log(error.response.headers);
+            // }
         
             if(error.response.data && error.response.data.message && typeof error.response.data.errors == "undefined") {
                 // this.$toast.add({

@@ -57,5 +57,19 @@ export default defineConfig({
         alias: {
             '@': '/resources/js'
         }
-    }
+    },
+  server: {
+    host: '127.0.0.1',
+    port: 5173,
+    strictPort: true,
+    origin: 'http://uphmc-sms.test:5173',
+    cors: {
+      origin: 'http://uphmc-sms.test',
+    },
+    hmr: {
+      host: 'uphmc-sms.test',
+      protocol: 'ws',
+      port: 5173,
+    },
+  },
 })

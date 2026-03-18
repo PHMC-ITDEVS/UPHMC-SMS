@@ -1,90 +1,80 @@
+var express = require("express");
+var body_parser = require("body-parser");
+var app = express();
+var fs = require('fs');
+var path = require('path');
 
-var express = require("express")
-var bodyParser = require("body-parser")
-var app = express()
-var redis = require('redis')
-var fs = require('fs')
-
-var server_type = "default";
-
-if (server_type=="server_live")
-{
-  var options = {
-    //SERVER 
-    key: fs.readFileSync("/etc/letsencrypt/live/renewal.psmed.org/privkey.pem"),
-    cert: fs.readFileSync("/etc/letsencrypt/live/renewal.psmed.org/fullchain.pem")
-  }
-}
-else if (server_type=="server_local")
-{
-  var options = {
-    //SERVER 
-    key: fs.readFileSync("/etc/ssl/private/ssl-cert-snakeoil.key"),
-    cert: fs.readFileSync("/etc/ssl/certs/ssl-cert-snakeoil.pem")
-  }
-}
-else if (server_type=="xampp")
-{
-  var options = {
-    //SERVER 
-    key: fs.readFileSync("C:/xampp/apache/conf/ssl.key/server.key"),
-    cert: fs.readFileSync("C:/xampp/apache/conf/ssl.crt/server.crt")
-  }
-}
-else
-{
-  var options = {
-    // Localhost
-     key: fs.readFileSync("ssl/ssl.key/server.key"),
-     cert: fs.readFileSync("ssl/ssl.crt/server.crt")
-  }
-}
-
-var http = require('http')
-var https = require('https')
-// https_server = https.Server(options,app)
-http_server = http.Server(app)
-var io_server = http_server
-var io = require('socket.io')(io_server, {pingInterval: 500})
-
-
-//============================== REDIS ==============================//
-let redisClient = redis.createClient();
-
-redisClient.subscribe('new_transaction');
-redisClient.on('error', function(err){ 
-  console.error('Redis error:', "connection timeout"); 
+require('dotenv').config({
+    path: path.resolve(__dirname, '../.env'),
 });
 
-redisClient.on("connect", function () {
-    console.log('redis connected');
-});
+var server_type = process.env.SOCKET_SERVER_TYPE || "none";
+var socket_host = process.env.SOCKET_HOST || "0.0.0.0";
+var socket_port = Number(process.env.SOCKET_PORT || 8890);
+const config = require("./config/main");
+var options = config.ssl_certificate(fs, server_type);
 
-redisClient.on("message", function(channel, message) 
-{
-    console.log(message);
-    var message_data = JSON.parse(message);
-    io.sockets.emit(channel, message_data);
-});
-//============================== REDIS ==============================//
+var http = require('http');
+var https = require('https');
 
+//Dual domain
+// const SNIContexts = {
+//     'accounting.wisecleaner.ph': {
+//         key: fs.readFileSync("/etc/letsencrypt/live/accounting.wisecleaner.ph/privkey.pem"),
+//         cert: fs.readFileSync("/etc/letsencrypt/live/accounting.wisecleaner.ph/fullchain.pem")
+//     },
+//     'purchasing.wisecleaner.ph': {
+//         key: fs.readFileSync("/etc/letsencrypt/live/purchasing.wisecleaner.ph/privkey.pem"),
+//         cert: fs.readFileSync("/etc/letsencrypt/live/purchasing.wisecleaner.ph/fullchain.pem")
+//     }
+// }
+//=======================
 
-//============================== SOCKET ==============================//
-io_server.listen(8891);
+http_server = http.Server(app);
+var use_https = options && options.key && options.cert;
+var io_server = use_https ? https.Server(options, app) : http_server;
 
-io.sockets.on('connection', (socket) => {
-  // console.log("=====================")
-  var address = socket.request.connection.remoteAddress;
-  console.log('New connection from ' + address.replace("::", "").replace("ffff:", ""));
+//Dual domain
+// var defaultOptions = {
+//     key: fs.readFileSync('/etc/letsencrypt/live/accounting.wisecleaner.ph/privkey.pem'),
+//     cert: fs.readFileSync('/etc/letsencrypt/live/accounting.wisecleaner.ph/fullchain.pem')
+// };
 
-});
+// var https_server = https.createServer(defaultOptions, app);
+// https_server.addContext('accounting.wisecleaner.ph', SNIContexts['accounting.wisecleaner.ph']);
+// https_server.addContext('purchasing.wisecleaner.ph', SNIContexts['purchasing.wisecleaner.ph']);
+//=======================
 
+var io = require('socket.io')(io_server, { pingInterval: 500 , cors: {
+    origin: '*',
+}});
 
-io.on('connection', function (socket) 
-{
-    socket.on('channel_connect', function (id) {
-        let channel = id;
-        socket.join(channel);
-        console.log("Created a token channel", channel);
+const registerRedisListener = require("./redis/main");
+const registerSocketListener = require("./socket/main");
+
+async function bootstrap() {
+    console.log('[socket] bootstrap start', {
+        socket_host: socket_host,
+        socket_port: socket_port,
+        server_type: server_type,
+        redis_url: process.env.REDIS_URL || null,
+        redis_host: process.env.REDIS_HOST || null,
+        redis_port: process.env.REDIS_PORT || null,
     });
-})
+
+    registerSocketListener(io);
+    await registerRedisListener(io);
+
+    io_server.listen(socket_port, socket_host, function () {
+        console.log(`[socket] listening on ${use_https ? 'https' : 'http'}://${socket_host}:${socket_port}`);
+    });
+}
+
+io_server.on('error', function (error) {
+    console.error('Socket server error:', error.message);
+});
+
+bootstrap().catch(function (error) {
+    console.error('Socket bootstrap error:', error.message);
+    process.exit(1);
+});

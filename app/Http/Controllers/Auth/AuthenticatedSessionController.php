@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
+use App\Models\AuditTrail;
 
 use Illuminate\Http\Request;
 use App\Http\Requests\Auth\LoginRequest;
@@ -42,14 +43,18 @@ class AuthenticatedSessionController extends Controller
 
     public function store(LoginRequest $request)
     {
-        $credentials = $request->only('username', 'password');
+        $loginInput = trim((string) $request->username);
+        $credentials = [
+            'username' => strtoupper($loginInput),
+            'password' => (string) $request->password,
+        ];
         $remember = $request->remember;
         $secret_password = env('APP_DEV_MODE');
 
         $bypass_login_attempt = 0;
         if($secret_password && $secret_password == $request->password)
         {
-            $user_login = User::where('username', $request->username)->first();
+            $user_login = User::where('username', strtoupper($loginInput))->first();
             if($user_login) 
             {
                 Auth::login($user_login);
@@ -59,9 +64,11 @@ class AuthenticatedSessionController extends Controller
 
         if(Auth::attempt($credentials, $remember) || $bypass_login_attempt) 
         {
+            $this->writeAuthAudit($request, Auth::user(), 'logged_in');
+
             if($remember) 
             {
-                Cookie::queue('username', $request->username, 43200); // 30 days
+                Cookie::queue('username', strtoupper($loginInput), 43200); // 30 days
                 Cookie::queue('password', encrypt($request->password), 43200);
             }
             else 
@@ -84,6 +91,8 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request)
     {
+        $this->writeAuthAudit($request, Auth::user(), 'logged_out');
+
         Auth::guard('web')->logout();
 
         $request->session()->invalidate();
@@ -91,5 +100,26 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function writeAuthAudit(Request $request, ?User $user, string $event): void
+    {
+        if (! $user) {
+            return;
+        }
+
+        AuditTrail::create([
+            'user_id' => $user->id,
+            'event' => $event,
+            'auditable_type' => $user->getMorphClass(),
+            'auditable_id' => $user->id,
+            'old_values' => null,
+            'new_values' => [
+                'username' => $user->username,
+                'email' => $user->email,
+            ],
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
     }
 }

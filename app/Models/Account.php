@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditTrail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -10,20 +11,32 @@ use Illuminate\Support\Facades\Storage;
 
 class Account extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditTrail;
 
     protected $appends = [ 'avatar'];
 
-    protected $fillable = ['user_id','account_number','first_name','middle_name','last_name'];
+    protected $fillable = ['user_id','department_id','position_id','account_number','first_name','middle_name','last_name'];
 
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
+    public function department()
+    {
+        return $this->belongsTo(Department::class);
+    }
+
+    public function position()
+    {
+        return $this->belongsTo(Position::class);
+    }
+
     public function getCreatedAtAttribute($value)
     {
-        return Carbon::parse($value)->timezone(config("timezone"))->format('d M Y H:i');
+        return Carbon::parse($value)
+            ->timezone(config('app.timezone'))
+            ->format('d M Y H:i');
     }
 
     public function getAvatarAttribute()

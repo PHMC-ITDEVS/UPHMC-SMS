@@ -6,6 +6,28 @@
 /*gray variables*/
 /*white variables*/
 /*black variables*/
+:root {
+    --primary-color: #084a2f;
+    --primary-hover-color: #0b5d3b;
+    --secondary-color: #0e4f3b;
+    --secondary-hover-color: #0a3f2f;
+    --on-primary: #ffffff;
+    --info-color: #1f8fbf;
+    --info-hover-color: #177299;
+    --warning-color: #b68a2f;
+    --warning-hover-color: #8f6b23;
+    --danger-color: #a43737;
+    --danger-hover-color: #822b2b;
+    --accent-gold: #caa95a;
+    --accent-navy: #243a7a;
+    --accent-maroon: #9f2f3a;
+    --text-color: #1f2937;
+    --muted-color: #6b7280;
+    --surface-color: #ffffff;
+    --surface-muted: #f8fafc;
+    --border-color: #dbe5ee;
+}
+
 .app-sidebar .mCSB_draggerContainer {
     right: -11px !important;
 }
@@ -46,7 +68,7 @@
         right: 0;
         position: fixed;
         z-index: 999;
-        background: #29327f;
+        background: var(--primary-color);
         border-top-right-radius: 70px;
         -webkit-transition: left 0.3s ease, width 0.3s ease;
         -o-transition: left 0.3s ease, width 0.3s ease;
@@ -205,7 +227,7 @@
 }
 
 .app-sidebar__toggle {
-    color: #3a437f;
+    color: var(--primary-color);
     -webkit-transition: background-color 0.3s ease;
     -o-transition: background-color 0.3s ease;
     transition: background-color 0.3s ease;
@@ -214,7 +236,7 @@
 }
 
 .app-sidebar__toggle svg {
-    fill: #738298;
+    fill: var(--muted-color);
     margin-top: 6px;
 }
 
@@ -237,11 +259,11 @@
     top: 0;
     bottom: 0;
     left: 0;
-    color: #8a98ac;
+    color: var(--muted-color);
     width: 250px;
     height: 100%;
     z-index: 1000;
-    background: #29327f;
+    background: var(--primary-color);
     -webkit-box-shadow: 0px 22px 0 21px #f1f4fb;
     box-shadow: -8px 12px 18px 0 #f1f4fb;
     border-right: 1px solid #eff0f6;
@@ -352,26 +374,26 @@
     -webkit-transition: border-left-color 0.3s ease, background-color 0.3s ease;
     -o-transition: border-left-color 0.3s ease, background-color 0.3s ease;
     transition: border-left-color 0.3s ease, background-color 0.3s ease;
-    color: #a2a6cb;
+    color: color-mix(in srgb, var(--on-primary) 80%, var(--primary-color));
     margin: 3px 0px 3px 12px;
     border-radius: 50px 0 0px 50px;
 }
 
 .side-menu__item.active {
     text-decoration: none;
-    color: #332a7c;
+    color: var(--on-primary);
 }
 
 .side-menu__item.active .side-menu__icon,
 .side-menu__item.active:hover .side-menu__icon,
 .side-menu__item.active:focus .side-menu__icon {
-    color: #332a7c;
-    fill: #b3b8d1;
+    color: var(--on-primary);
+    fill: color-mix(in srgb, var(--on-primary) 88%, var(--primary-color));
 }
 
 .slide-item.active {
     text-decoration: none;
-    color: #b5c1d2;
+    color: var(--on-primary);
 }
 
 .slide-menu a.active {
@@ -386,8 +408,8 @@
 
 .side-menu__item:hover .side-menu__icon,
 .side-menu__item:focus .side-menu__icon {
-    fill: rgba(255, 255, 255, 0.05);
-    color: rgba(255, 255, 255, 0.8);
+    fill: color-mix(in srgb, var(--on-primary) 85%, var(--primary-color));
+    color: var(--on-primary);
 }
 
 .slide-item.active,
@@ -425,8 +447,8 @@
 }
 
 .side-menu .side-menu__icon {
-    color: #a2a6cb;
-    fill: rgba(255, 255, 255, 0.1);
+    color: color-mix(in srgb, var(--on-primary) 78%, var(--primary-color));
+    fill: color-mix(in srgb, var(--on-primary) 80%, var(--primary-color));
     height: 22px;
     width: 22px;
     line-height: 22px;
@@ -487,7 +509,7 @@
     align-items: center;
     padding: 8px 14px 8px 15px;
     font-size: 13px;
-    color: #7083ab;
+    color: color-mix(in srgb, var(--surface-color) 60%, var(--primary-color));
     margin-left: 18px;
 }
 
@@ -620,11 +642,11 @@
 
     .app.sidebar-mini.sidenav-toggled .side-menu__item.active:before,
     .app.sidebar-mini.sidenav-toggled .side-menu__item.active:after {
-        border-right: 20px solid #29327f;
+        border-right: 20px solid var(--primary-color);
     }
 
     .app.sidebar-mini.sidenav-toggled1 .side-menu__item.active:after {
-        border-right: 20px solid #29327f;
+        border-right: 20px solid var(--primary-color);
     }
 
     .app.sidebar-mini.sidenav-toggled .app-sidebar__logo {
@@ -814,7 +836,7 @@
 }
 
 .user-info .text-muted {
-    color: #8183b4 !important;
+    color: color-mix(in srgb, var(--on-primary) 55%, var(--primary-color)) !important;
 }
 
 .app-sidebar__logo .header-brand1 {
@@ -869,9 +891,9 @@
 }
 
 .sidebar-navs a {
-    background: #25335f;
+    background: var(--accent-navy);
     border: 1px solid rgba(255, 255, 255, 0.04) !important;
-    color: #68798b !important;
+    color: color-mix(in srgb, var(--surface-color) 45%, var(--accent-navy)) !important;
     border-radius: 5px;
     padding: 0.8rem !important;
 }
@@ -886,7 +908,7 @@
 }
 
 .side-menu h3 {
-    color: #6f749c;
+    color: color-mix(in srgb, var(--on-primary) 50%, var(--primary-color));
     text-transform: uppercase;
     letter-spacing: .5px;
     font-weight: bold;
@@ -901,8 +923,8 @@
 }
 
 .side-menu__item.active {
-    background: #f1f3fd;
-    color: #332a7c;
+    background: #eff2f6;
+    color: var(--primary-color);
 }
 
 .app.sidebar-mini .footer {
@@ -941,8 +963,13 @@
     border-top-color: transparent;
     border-left-color: transparent;
     border-bottom: transparent;
-    border-right: 20px solid #29327f;
+    border-right: 20px solid var(--primary-color);
     border-radius: 0px 0px 48px 0px;
+}
+
+.side-menu__item.active .side-menu__icon, .side-menu__item.active:hover .side-menu__icon, .side-menu__item.active:focus .side-menu__icon {
+    color: var(--primary-color);
+    fill: #b3b8d1;
 }
 
 .side-menu__item.active:after {
@@ -956,12 +983,12 @@
     border-top-color: transparent;
     border-left-color: transparent;
     border-bottom: transparent;
-    border-right: 20px solid #29327f;
+    border-right: 20px solid var(--primary-color);
     border-radius: 0px 48px 0px 0px;
 }
 
 .side-menu__item.active .shape1 {
-    background: #eff2f6;
+    background: #eff2f6;;
     position: absolute;
     top: -30px;
     width: 20px;
@@ -970,7 +997,7 @@
 }
 
 .side-menu__item.active .shape2 {
-    background: #eff2f6;
+    background: #eff2f6;;
     position: absolute;
     top: 46px;
     width: 20px;
@@ -984,7 +1011,7 @@
     height: 40px !important;
     display: block;
     line-height: 40px;
-    color: #7083ab;
+    color: color-mix(in srgb, var(--on-primary) 76%, var(--primary-color));
 }
 
 .sub-slide-item {
@@ -1001,7 +1028,7 @@
     height: 28px !important;
     padding: 19px 0 19px 50px !important;
     font-size: 12px;
-    color: #7083ab;
+    color: color-mix(in srgb, var(--on-primary) 76%, var(--primary-color));
 }
 
 .sub-slide-menu {

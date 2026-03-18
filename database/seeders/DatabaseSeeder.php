@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Employee;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -15,10 +14,14 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         // \App\Models\User::factory(10)->create();
-        // Employee::factory(100)->create();
 
-        $this->call(RolesTableSeeder::class);
-        $this->call(AccountsTableSeeder::class);
+        $this->call([
+            RolesAndPermissionsSeeder::class,
+            DepartmentsTableSeeder::class,
+            PositionsTableSeeder::class,
+            AccountsTableSeeder::class,
+            SmsGatewaySeeder::class,
+        ]);
         
     }
 }

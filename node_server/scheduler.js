@@ -4,57 +4,40 @@ const { exec } = require("child_process");
 exec_option = { detached: false, shell: false, windowsHide: true, maxBuffer: 1024 * 500 }
 
 /*
-*    *    *    *    *    *
-┬    ┬    ┬    ┬    ┬    ┬
-│    │    │    │    │    |
-│    │    │    │    │    └ day of week (0 - 7) (0 or 7 is Sun)
-│    │    │    │    └───── month (1 - 12)
-│    │    │    └────────── day of month (1 - 31)
-│    │    └─────────────── hour (0 - 23)
-│    └──────────────────── minute (0 - 59)
-└───────────────────────── second (0 - 59, OPTIONAL)
+    *    *    *    *    *    *
+    ┬    ┬    ┬    ┬    ┬    ┬
+    │    │    │    │    │    |
+    │    │    │    │    │    └ day of week (0 - 7) (0 or 7 is Sun)
+    │    │    │    │    └───── month (1 - 12)
+    │    │    │    └────────── day of month (1 - 31)
+    │    │    └─────────────── hour (0 - 23)
+    │    └──────────────────── minute (0 - 59)
+    └───────────────────────── second (0 - 59, OPTIONAL)
 */
 
 
-schedule.scheduleJob('0 * * * * *', function(){
-    execute_command("registration:notify");
-});
-
-schedule.scheduleJob('*/30 * * * * *', function(){
-    execute_command("series:generate");
-});
-
-schedule.scheduleJob('*/10 * * * * *', function(){
-    execute_command("transact:blockchain");
-});
-
-schedule.scheduleJob('0 30 5 * * *', function(){
-    execute_command("generate:data");
-});
-
-// schedule.scheduleJob('0 30 8 * * *', function(){
-//     execute_command2("node node_server/populate_transaction.js");
+// schedule.scheduleJob('0 * * * * *', function(){
+//     execute_command("registration:notify");
 // });
+execute_command("queue:restart");
 
-// schedule.scheduleJob('0 30 11 * * *', function(){
-//     execute_command2("node node_server/populate_transaction.js");
-// });
-
-// schedule.scheduleJob('0 30 20 * * *', function(){
-//     execute_command2("node node_server/populate_transaction.js");
-// });
+setTimeout(function() {       
+    execute_command("queue:work");
+    execute_command("queue:work --queue=excel_counter_queue");
+    execute_command("queue:work --queue=revolving_queue");
+}, 3000)
 
 function execute_command(command)
 {
-
     let date = new Date();
 
     exec(`php artisan ${command}`, exec_option, (error, stdout, stderr) => {
-        if (error) {
+        if(error) {
             console.log(`error: ${error.message}`);
             return;
         }
-        if (stderr) {
+
+        if(stderr) {
             console.log(`stderr: ${stderr}`);
             return;
         }
@@ -80,13 +63,7 @@ function execute_command2(command)
     });
 }
 
-
 // let seconds = 30;
 // setInterval(() => {
 //     execute_command("verify:payment");
-// }, seconds * 1000);
-
-
-// setInterval(() => {
-//     execute_command("firebase:notify");
-// }, 2000);
+// }, seconds * 1e3);

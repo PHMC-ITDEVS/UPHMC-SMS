@@ -4,40 +4,37 @@
 
 <script>
 export default {
-    filters: {
+    methods: {
+        socket_listener() {
+            this.$socket.off('connect');
+            this.$socket.off('connect_error');
+            this.$socket.off('sms_status');
+
+            this.$socket.on("connect", () => {
+                // console.log('[broadcast] connected', this.$socket.id);
+            });
+
+            this.$socket.on("connect_error", (error) => {
+                console.error('[broadcast] connect_error', error?.message || error);
+            });
+
+            this.$socket.on('sms_status', (data) => {
+                // console.log('[broadcast] sms_status', data);
+                this.emitter.emit("sms_status", data);
+            });
+        },
     },
 
-    computed: {
-       
-    },
-    data() {
-        return {
-            
-        }
-    },
-    methods: {
-        socket_listener()
-        {
-            this.$socket.client.off('connect');
-            this.$socket.client.on("connect", data => {
-                this.$socket.client.off('new_transaction');
-                this.$socket.client.on('new_transaction', data => {
-                    this.emitter.emit("new_transaction",data);
-                    let message = `New transaction for ${data.dsp.company_name.toLowerCase()}`;
-                    this.toast("success",message);
-                    // this.$toast.add({ severity: 'info', summary: 'Confirmed', detail: 'Record approved', life: 3000 });
-                });
-            });
-        },      
-    },
-    mounted(){
-        this.$socket.client.close();
-        this.$socket.client.open();
+    mounted() {
+        // console.log('[broadcast] mounted');
+        this.$socket.close();
         this.socket_listener();
+        this.$socket.open();
     },
-    beforeDestroy()
-    {
-        this.$socket.client.close();
+
+    beforeUnmount() {
+        // console.log('[broadcast] beforeUnmount');
+        this.$socket.close();
     },
 }
 </script>

@@ -2,7 +2,7 @@
     <app-guest>
         <div class="login-logo"> 
             <a href="/">
-                <img src="/images/default.png" class="header-brand-img dark-logo" alt="logo">
+                <img src="/images/phmc-banner.png" class="header-brand-img dark-logo login" alt="logo">
             </a> 
         </div>
 
@@ -43,17 +43,15 @@
                     </v-field>
 
                     <div class="d-flex flex-row align-items-center justify-content-between">
-                        <v-field slim class="form-group mb-0" as="div" name="remember" v-slot="{ errors }">
-                            <label class="d-flex flex-row align-items-center">
-                                <p-checkbox 
+                        <v-field slim class="form-group d-flex flex-row align-items-center gap-1 mb-0" as="div" name="remember">
+                            <p-checkbox 
                                     v-model="form.remember" 
-                                    class="mr-1"
+                                    class=""
                                     name="remember" 
                                     :binary="true"
                                     input-id="remember"
                                 />
-                                <span class="text-muted">Remember me</span> 
-                            </label>
+                            <label class="text-muted mb-0">Remember me</label> 
                         </v-field>
 
                         <div class="form-group mb-0"> 
@@ -71,9 +69,9 @@
                         />
                     </div>
 
-                    <div class="text-center mt-7 mb-5">
+                    <!-- <div class="text-center mt-7 mb-5">
                         <div class="font-weight-normal fs-16 text-muted">You Don't have an account <a class="btn-link font-weight-normal" href="/register">Register Here</a></div>
-                    </div>
+                    </div> -->
 
                 </v-form>
             </div>

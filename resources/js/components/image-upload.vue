@@ -3,7 +3,7 @@
         <div class="upload-container d-flex flex-column align-items-center justify-content-center" ref="upload_container">
             <input ref="browse" type="file" accept="image/png, image/jpeg" hidden @change="imageChanged($event)" />
 
-            <img src="/images/img-icon.png" alt="Placeholder" class="img-placeholder-icon" />
+            <img src="/images/default.png" alt="Placeholder" class="img-placeholder-icon" />
 
             <div class="upload-label">
                 <a href="javascript:void(0);" class="action" @click="toggleCamera">Capture</a> or <a href="javascript:void(0);" class="action" @click="browseFile">Upload</a>
@@ -102,13 +102,26 @@
 
             createCameraElement() {
                 this.cameraLoading = !0;
+
+                const mediaDevices = navigator?.mediaDevices;
+                if (!mediaDevices || typeof mediaDevices.getUserMedia !== 'function') {
+                    this.cameraLoading = !1;
+                    this.cameraOpen = !1;
+                    this.swal(
+                        "warning",
+                        "Camera Unavailable",
+                        "Camera access is not available in this browser or context.",
+                        "Okay"
+                    );
+                    return;
+                }
       
                 const constraints = (window.constraints = {
                     audio: false,
                     video: !0
                 });
 
-                navigator.mediaDevices
+                mediaDevices
                     .getUserMedia(constraints)
                     .then(stream => {
                         this.cameraLoading = !1;
@@ -116,16 +129,22 @@
                     })
                     .catch(error => {
                         this.cameraLoading = !1;
+                        this.cameraOpen = !1;
                         alert("May the browser didn't support or there is some errors.");
                     });
             },
 
             stopCameraStream() {
-                let tracks = this.$refs.camera.srcObject.getTracks();
+                const stream = this.$refs.camera?.srcObject;
+                if (!stream || typeof stream.getTracks !== 'function') return;
+
+                let tracks = stream.getTracks();
 
                 tracks.forEach(track => {
                     track.stop();
                 });
+
+                this.$refs.camera.srcObject = null;
             },
 
             takePhoto() {

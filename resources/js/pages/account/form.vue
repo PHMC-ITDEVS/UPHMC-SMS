@@ -103,7 +103,7 @@
                 this.context.loading = true;
                 AccountService.create(data)
                 .then((response) => {
-                    this.swalMessage("success",response.data.message,"Okay",false,false,false);
+                    this.$toast.add({ severity: 'success', summary: 'Success!', detail: response.data.message, life: 3000 });
                     this.$emit('hideModal');
                 })
                 .catch((errors) => {
@@ -121,7 +121,7 @@
                 this.context.loading = true;
                 AccountService.update(data,id)
                 .then((response) => {
-                    this.swalMessage("success",response.data.message,"Okay",false,false,false);
+                    this.$toast.add({ severity: 'success', summary: 'Success!', detail: response.data.message, life: 3000 });
                     this.$emit('hideModal');
                 })
                 .catch((errors) => {

@@ -37,22 +37,7 @@
                             >
                                 <template #empty>No records found.</template>
                                 <template #loading><app-loader/></template>
-                                <p-column>
-                                    <template #body="{data}">
-                                        <div class="d-flex flex-row justify-content-center gap-1">
-                                            <p-button
-                                                class="btn btn-sm btn-warning"
-                                                icon="pi pi-pencil"
-                                                @click.prevent="viewData(data)"
-                                            />
-                                            <p-button
-                                                class="btn btn-sm btn-danger"
-                                                icon="pi pi-times"
-                                                @click="deleteData(data)"
-                                            />
-                                        </div>
-                                    </template>
-                                </p-column>
+                                
                                 <p-column header="Name">
                                     <template #body="{data}">
                                         {{ `${ data.first_name ? data.first_name : "" } ${ data.last_name ? data.last_name : "" }` }}
@@ -70,10 +55,31 @@
                                 </p-column>
                                 <p-column header="Position">
                                     <template #body="{data}">
-                                        {{ data.user.role_name }}
+                                        {{ data.position?.name ?? '-' }}
+                                    </template>
+                                </p-column>
+                                <p-column header="Department">
+                                    <template #body="{data}">
+                                        {{ data.department?.name ?? '-' }}
                                     </template>
                                 </p-column>
                                 <p-column field="created_at" header="Date Created"></p-column>
+                                <p-column header="Actions">
+                                    <template #body="{data}">
+                                        <div class="d-flex flex-row justify-content-start gap-1 actions-menu">
+                                            <p-button
+                                                class="btn btn-sm warning"
+                                                icon="pi pi-pencil"
+                                                @click.prevent="viewData(data)"
+                                            />
+                                            <p-button
+                                                class="btn btn-sm danger"
+                                                icon="pi pi-trash"
+                                                @click="deleteData(data)"
+                                            />
+                                        </div>
+                                    </template>
+                                </p-column>
                             </p-table>
                         </div>
 
@@ -174,6 +180,8 @@
                         confirm_password: null,
                         role_name: null,
                         email: null,
+                        department_id: null,
+                        position_id: null,
                         avatar: null,
                         image: null
                     },
@@ -247,7 +255,7 @@
                     accept: () => {
                     AccountService.remove(item.account_number)
                     .then((response) => {
-                        this.swalMessage("success",response.data.message,"Okay",false,false,false);
+                        this.$toast.add({ severity: 'success', summary: 'Success!', detail: response.data.message, life: 3000 });
                         this.getTableData(this.table.current_page);
                     })
                     .catch((errors) => {
@@ -272,8 +280,9 @@
                 .then((response) => {
                     let data = response.data.data;
                     let params = {...data};
+                        params.user_id = data.user?.id ?? null;
                         params.username = data.user.username;
-                        params.role_name = data.user.roles[0].display_name;
+                        params.role_name = data.user.roles?.[0]?.display_name ?? null;
                         params.email = data.user.email;
 
                     this.dialog.form = new Form(params);

@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use App\Library\Helper;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Carbon\Carbon;
 class AccountController extends Controller
 {
@@ -31,7 +32,7 @@ class AccountController extends Controller
         $end_date = isset($request->end_date) ? Carbon::parse($request->end_date)->copy()->endOfDay()->toDateTimeString() : null;
 
 
-        $data = Account::with(['user'])
+        $data = Account::with(['user', 'department', 'position'])
             ->when($search, function ($query, $value) 
             {
                 $query->whereRaw("concat(first_name,' ',last_name) LIKE ?",['%'.$value.'%'])
@@ -57,7 +58,7 @@ class AccountController extends Controller
 
     public function get($id)
     {
-        $data = Account::with(["user"])
+        $data = Account::with(["user", "department", "position"])
             ->where("account_number",$id)
             ->first();
 
@@ -68,19 +69,20 @@ class AccountController extends Controller
     {
         $rules = [];
         $password = ["nullable|"];
-        $user_id = $request->user_id;
+        $userId = $this->resolveUserId($request);
     
-        if (!$user_id)
+        if (!$userId)
         {
             $password = [ "required", "alpha_dash", "same:confirm_password"];
         }
 
-        switch ($request->step_no) {
+        switch ($request->step_no) 
+        {
             case 0:
                 $rules = [
                     'role_name' => ['required', 'string'],
-                    'email' => ['required', 'email', "unique:users,email,$user_id"],
-                    'username' => ['required', 'string', 'alpha_dash', "unique:users,username,$user_id"],
+                    'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($userId)],
+                    'username' => ['required', 'string', 'alpha_dash', Rule::unique('users', 'username')->ignore($userId)],
                     'password' => $password,
                 ];
                 break;
@@ -90,6 +92,8 @@ class AccountController extends Controller
                     'first_name' => ['required', 'string'],
                     'last_name' => ['required', 'string'],
                     'middle_name' => ['nullable', 'string'],
+                    'department_id' => ['nullable', 'exists:departments,id'],
+                    'position_id' => ['nullable', 'exists:positions,id'],
                 ];
                 break;
         
@@ -118,6 +122,8 @@ class AccountController extends Controller
             'first_name' => ['required', 'string'],
             'last_name' => ['required', 'string'],
             'middle_name' => ['nullable', 'string'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'position_id' => ['nullable', 'exists:positions,id'],
         ]);
 
         if($validator->fails()) 
@@ -139,13 +145,15 @@ class AccountController extends Controller
                 $account_number = $ref = Helper::ref_number("A",20);
                 $account = Account::create([
                     "user_id"=>$user->id,
+                    "department_id"=>$request->department_id,
+                    "position_id"=>$request->position_id,
                     "account_number"=>$account_number,
                     "first_name"=>$request->first_name,
                     "middle_name"=>$request->middle_name,
                     "last_name"=>$request->last_name
                 ]);
                 
-                $user->addRole($request->role_name);
+                $user->addRole(strtolower($request->role_name));
         
                 if ($request->new_avatar) FileController::saveImage($account->account_number,"accounts",$request->new_avatar);
         
@@ -159,15 +167,19 @@ class AccountController extends Controller
     }
     public function update($id,Request $request)
     {
-        $user_id = $request->user_id;
+        $account = Account::where("id",$id)->firstOrFail();
+        $userId = $request->input('user_id', $account->user_id);
+
         $validator = Validator::make($request->all(), [
             'id' => ['required', "exists:accounts,id"],
             'role_name' => ['required', 'string'],
-            'email' => ['required', 'email', "unique:users,email,$user_id"],
-            'username' => ['required', 'string', 'alpha_dash', "unique:users,username,$user_id"],
+            'email' => ['required', 'email', Rule::unique('users', 'email')->ignore($userId)],
+            'username' => ['required', 'string', 'alpha_dash', Rule::unique('users', 'username')->ignore($userId)],
             'first_name' => ['required', 'string'],
             'last_name' => ['required', 'string'],
             'middle_name' => ['nullable', 'string'],
+            'department_id' => ['nullable', 'exists:departments,id'],
+            'position_id' => ['nullable', 'exists:positions,id'],
         ]);
 
         if($validator->fails()) 
@@ -176,10 +188,9 @@ class AccountController extends Controller
             return response()->json($log, 400);
         }
 
-        $account = Account::where("id",$id)
-            ->first();
-
         $account->update([
+            "department_id" => $request->department_id,
+            "position_id" => $request->position_id,
             "first_name" => $request->first_name,
             "middle_name" => $request->middle_name,
             "last_name" => $request->last_name
@@ -194,19 +205,41 @@ class AccountController extends Controller
                 "email"=>$request->email,
                 "username"=>$request->username,
             ]);
-        
-            $user->removeRole($user->role_name); 
-            $user->addRole($request->role_name);
+
+            if ($user->role_name && $user->role_name !== $request->role_name) {
+                $user->removeRole($user->role_name);
+            }
+
+            if ($request->role_name && $user->role_name !== $request->role_name) {
+                $user->addRole($request->role_name);
+            }
         }
         
         if ($request->new_avatar) FileController::saveImage($account->account_number,"accounts",$request->new_avatar);
 
         return response()->json(['success' => 1,"message"=>"Success!"]);
     }
+
+    private function resolveUserId(Request $request): ?int
+    {
+        $userId = $request->input('user_id');
+
+        if ($userId !== null && $userId !== '') {
+            return (int) $userId;
+        }
+
+        $accountId = $request->input('id');
+
+        if ($accountId === null || $accountId === '') {
+            return null;
+        }
+
+        return Account::where('id', $accountId)->value('user_id');
+    }
     public function destroy($account_number, Request $request)
     {
-        $item = Account::where("account_number",$account_number)
-            ->delete();
+        $account = Account::where("account_number", $account_number)->firstOrFail();
+        $account->delete();
 
         return response()->json(['success' => 1,"message"=>"Success!"]);
     }

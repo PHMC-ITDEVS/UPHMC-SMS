@@ -22,8 +22,7 @@ class CreateFileUploadsTable extends Migration
             $table->string('size')->default('')->nullable();
             $table->string('mime_type')->default('')->nullable();
             $table->string('extension')->default('')->nullable()->index();
-            $table->timestamp('created_at')->default(DB::raw('CURRENT_TIMESTAMP'));
-            $table->timestamp('updated_at')->default(DB::raw('CURRENT_TIMESTAMP on update CURRENT_TIMESTAMP'));
+            $table->timestamps();
         });
     }
 

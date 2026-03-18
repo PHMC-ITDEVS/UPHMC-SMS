@@ -5,31 +5,36 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\File;
-
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Response;
 
+use App\Library\Helper;
+
 use App\Models\FileUpload;
+use App\Models\CompanyStorage;
 
 class FileController extends Controller
 {
-    public static function saveImage($id, $folder_name, $base64)
+    public static function saveImage($id, $folder_name, $base64): void
+    {
+        static::uploadImage($id, $folder_name, $base64);
+    }
+
+    public static function fileUpload($id, $file_name, $folder_name, $base64): void
+    {
+        // Backward-compatible alias used by legacy call sites.
+        static::uploadImage($id, $folder_name, $base64);
+    }
+
+    public static function uploadImage($id, $folder_name, $base64)
     {
         try
         {
-            $replace = substr($base64, 0, strpos($base64, ',') + 1);
-            $file = str_replace($replace, '', $base64); 
-            $file = str_replace(' ', '+', $file); 
-            $file = base64_decode($file);
+            Log::info("[UPLOAD_IMAGE][$folder_name][$id]");
+            $file = static::decodeBase64Payload($base64);
+            $extension = static::extractBase64Extension($base64);
 
-            // $extension = explode('/', explode(':', substr($base64, 0, strpos($base64, ';')))[1])[1];
-
-            $file_info = finfo_open();
-            $mime_type = finfo_buffer($file_info, $file, FILEINFO_MIME_TYPE);
-            $extension = 'png';
-
-            Storage::disk()->put("private/$folder_name/$id.$extension", $file);
-            // Log::info("private/$folder_name/$id.$extension");
+            Storage::disk('local')->put("private/$folder_name/$id.$extension", $file);
         }
         catch(\Exception $ex)
         {
@@ -38,42 +43,30 @@ class FileController extends Controller
         }
     }
 
-    public static function saveVideo($id, $folder_name, $base64)
+    public function viewImage($folder, $file_id, Request $request)
     {
-        try
+        $is_accounts = (bool)($folder == 'accounts');
+        $file_id = $is_accounts ? $file_id : Helper::decrypt($file_id);
+        Log::info("[VIEW_IMAGE1][$folder][$file_id]");
+
+        $file_path = null;
+        foreach (['jpg', 'jpeg', 'png', 'svg', 'webp'] as $extension) 
         {
-            // Extract the base64 part and decode it
-            $replace = substr($base64, 0, strpos($base64, ',') + 1);
-            $file = str_replace($replace, '', $base64); 
-            $file = str_replace(' ', '+', $file); 
-            $file = base64_decode($file);
-
-            // Determine the file extension from the base64 string
-            $extension = explode('/', explode(':', substr($base64, 0, strpos($base64, ';')))[1])[1];
-
-            // Get the MIME type
-            $file_info = finfo_open();
-            $mime_type = finfo_buffer($file_info, $file, FILEINFO_MIME_TYPE);
-            
-            // Check for valid video extension (optional)
-            $valid_extensions = ['mp4', 'avi', 'mov', 'wmv', 'mkv'];
-            if (!in_array($extension, $valid_extensions)) {
-                throw new \Exception('Invalid video format.');
+            $candidate = "private/$folder/$file_id.$extension";
+            if (Storage::disk()->exists($candidate)) {
+                $file_path = $candidate;
+                break;
             }
-
-            // Store the video file
-            Storage::disk()->put("private/$folder_name/$id.$extension", $file);
-
-            Log::info("private/$folder_name/$id.$extension");
         }
-        catch (\Exception $ex)
-        {
-            Log::error("[upload_video]");
-            Log::error($ex);
+
+        if ($file_path === null){
+            return response()->file("images/default-user.jpg");
         }
+
+        return $this->streamStoredFile($file_path);
     }
 
-    public static function fileUpload($file_name, $id, $table , $file, $is_base64=true)
+    public static function uploadFile($table, $id, $file_name, $original_name, $file, $is_base64=true)
     {
         try
         {
@@ -88,9 +81,9 @@ class FileController extends Controller
                 $nfile = str_replace($replace, '', $file); 
                 $nfile = str_replace(' ', '+', $nfile); 
                 $nfile = base64_decode($nfile);
-    
+
                 $extension = explode('/', explode(':', substr($file, 0, strpos($file, ';')))[1])[1];
-    
+
                 $f = finfo_open();
                 $mime_type = finfo_buffer($f, $nfile, FILEINFO_MIME_TYPE);
                 $size = static::getBase64ImageSize($file);
@@ -101,36 +94,17 @@ class FileController extends Controller
                 $extension = strtolower($file->getClientOriginalExtension());
             }
 
-            if($extension == 'octet-stream')
-            {
-                $extension = 'jpg';
-            }
-            else if($mime_type == "image/png")
-            {
-                $mime_type = "image/jpeg";
-                $extension = 'jpg';
-            }
-            else if($mime_type == "image/jpeg")
-            {
-                $mime_type = "image/jpeg";
-                $extension = 'jpg';
-            }
-            else
-            {
-                $extension = $extension;
-            }
+            $data = new FileUpload;
+            $data->table = $table;
+            $data->table_id = $id;
+            $data->name = $file_name;
+            $data->original_name = $original_name;
+            $data->size = $size;
+            $data->mime_type = $mime_type;
+            $data->extension = $extension;
+            $data->save();
 
-            $data = FileUpload::updateOrCreate(
-                ['table' => $table, 'table_id' => $id],
-                [
-                    'name' => $file_name,
-                    'size' => $size,
-                    'mime_type' => $mime_type,
-                    'extension' => $extension
-                ]
-            );
-
-            Storage::disk()->put("private/$table/$id.$data->extension", $nfile);
+            Storage::disk()->put("private/$table/$id/$file_name.$data->extension", $nfile);
         }
         catch(\Exception $ex)
         {
@@ -138,81 +112,106 @@ class FileController extends Controller
         }
     }
 
-    public function viewImage($folder, $file_id, Request $request)
+    public static function cleanDirectory($table, $id)
     {
-        $secure = $request->secure;
-        $file_path_png = "private/$folder/$file_id.png";
-        $file_path_mp4 = "private/$folder/$file_id.mp4";
-
-        $exists_png = Storage::disk()->exists($file_path_png);
-        $exists_mp4 = Storage::disk()->exists($file_path_mp4);
-
-        if (!$exists_png && !$exists_mp4) 
+        try
         {
-            // Uncomment and customize these lines based on your gender logic
-            // if (strtolower($request->gender) == "male") {
-            //     return response()->file("images/male.jpg");
-            // } else if (strtolower($request->gender) == "female") {
-            //     return response()->file("images/female.jpg");
-            // } else if ($folder == "accounts") {
-            //     return response()->file("images/male.jpg");
-            // }
-            $file_name = 'default.png';
-            if ($folder == "accounts") $file_name = 'default-user.jpg';
+            $path = storage_path("app/private/$table/$id");
+            File::cleanDirectory($path);
 
-            return response()->file("images/$file_name");
+            $base_query = FileUpload::query()
+                ->where('table', $table)
+                ->where('table_id', $id);
+
+            $upload_size = $base_query->sum('size'); //calculate the sum of the size
+            $uploads = $base_query->delete(); //delete previous uploads
+
+        }
+        catch(\Exception $ex)
+        {
+            Log::error($ex);
+        }
+    }
+
+    public function viewFile(Request $request, $folder_name, $id)
+    {
+        $extension = $request->extension ? $request->extension : "jpg";
+        $name = Helper::decrypt($id);
+
+        $file_path = "private/$folder_name/$name.$extension";
+        $exists = Storage::disk()->exists($file_path);
+
+        if(!$exists)
+        {
+            return "";
         }
 
-        // Determine which file to serve
-        if ($exists_png) 
+        return $this->streamStoredFile($file_path);
+    }
+
+    public function viewFolderUpload(Request $request, $folder_name, $folder_id, $id)
+    {
+        $extension = "";
+        $name = Helper::decrypt($id);
+
+        $file_path = "private/$folder_name/$folder_id/$name$extension";
+        $exists = Storage::disk()->exists($file_path);
+
+        if(!$exists)
         {
-            $file = Storage::disk()->get($file_path_png);
-            $type = Storage::mimeType($file_path_png);
-        } 
-        else 
-        {
-            $file = Storage::disk()->get($file_path_mp4);
-            $type = Storage::mimeType($file_path_mp4);
+            return "";
         }
+
+        return $this->streamStoredFile($file_path);
+    }
+
+    public function viewExcel($date, $file_name)
+    {
+        $file_path = "excel/$date/$file_name";
+        $exists = Storage::disk()->exists($file_path);
+
+        if(!$exists)
+        {
+            abort(404);
+        }
+
+        return $this->streamStoredFile($file_path);
+    }
+
+    private function streamStoredFile(string $file_path)
+    {
+        $file = Storage::disk()->get($file_path);
+        $type = Storage::mimeType($file_path);
 
         $response = Response::make($file, 200);
         $response->header("Content-Type", $type);
         return $response;
     }
 
-
-    public function viewFileUpload(Request $request,$table, $name)
+    private static function decodeBase64Payload(string $base64): string
     {
-        $file = FileUpload::where("table", $table)
-            ->where('name', $name)
-            ->first();
-        
-        if(!$file)
-        {
-            return response()->file("images/default.png");
+        $normalized = $base64;
+        $commaPos = strpos($base64, ',');
+        if ($commaPos !== false) {
+            $replace = substr($base64, 0, $commaPos + 1);
+            $normalized = str_replace($replace, '', $base64);
+        }
+        $normalized = str_replace(' ', '+', $normalized);
+        return base64_decode($normalized);
+    }
+
+    private static function extractBase64Extension(string $base64): string
+    {
+        if (preg_match('/^data:image\/([a-zA-Z0-9.+-]+);base64,/', $base64, $matches)) {
+            $extension = strtolower($matches[1]);
+            if ($extension === 'jpg') return 'jpg';
+            if ($extension === 'jpeg') return 'jpeg';
+            if ($extension === 'png') return 'png';
+            if ($extension === 'svg+xml') return 'svg';
+            if ($extension === 'webp') return 'webp';
         }
 
-        $filename = $file->name .".". $file->extension;
-        $file_path = "$table/$filename";
-
-        $exists = Storage::disk('private')->exists($file_path);
-
-        if(!$exists)
-        {
-            $file_path = public_path("images/default.png");
-        }
-        else
-        {
-            $file_path = storage_path() ."/app/private/$file_path";
-        }
-
-        $original_name = str_replace(',', '', $file->original_name);
-
-        return response()->file($file_path,
-        [
-            'Content-Type' => $file->extension,
-            'Content-Disposition' => "inline; filename=$original_name.$file->extension"
-        ]);
+        return 'jpg';
     }
 
     private static function getBase64ImageSize($base64Image) // return memory size in B, KB, MB
@@ -223,26 +222,45 @@ class FileController extends Controller
             $size_in_kb = $size_in_bytes / 1024;
             $size_in_mb = $size_in_kb / 1024;
     
-            return $size_in_mb;
+            return round($size_in_mb, 10);
         }
-        catch(Exception $e)
+        catch(\Exception $e)
         {
             return $e;
         }
     }
 
-    public function viewExcel($file_type,$date, $file_name)
+    public static function getTotalFileSize($uploads) // return memory size in B, KB, MB
     {
-        $file_path = "$file_type/$date/$file_name";
-        $exists = Storage::disk()->exists($file_path);
+        try
+        {
+            $total_size = 0;
+            foreach ($uploads as $file)
+            {
+                $upload = $file;
+                if(is_array($upload) && array_key_exists('data', $upload) && $upload['data']) $upload = $file['data'];
 
-        if(!$exists) abort(404);
+                $size_in_bytes = (int) (strlen(rtrim($upload, '=')) * 3 / 4);
+                $size_in_kb = $size_in_bytes / 1024;
+                $size_in_mb = $size_in_kb / 1024;
 
-        $file = Storage::disk()->get($file_path);
-        $type = Storage::mimeType($file_path);
+                $total_size += round($size_in_mb, 10);
+            }
+            return $total_size;
+        }
+        catch(\Exception $e)
+        {
+            return $e;
+        }
+    }
 
-        $response = Response::make($file, 200);
-        $response->header("Content-Type", $type);
-        return $response;
+    public static function getInitialFileSize($table, $id)
+    {
+        $data = FileUpload::query()
+            ->where('table', $table)
+            ->where('table_id', $id)
+            ->sum('size');
+
+        return $data;
     }
 }

@@ -5,7 +5,7 @@ import { createApp, h } from 'vue'
 import { createInertiaApp, useForm, router, usePage } from '@inertiajs/vue3'
 // import vuetify from './plugins/vuetify'
 import toast from './plugins/toast'
-import primevue from './plugins/primevue'
+import { setupPrimeVue } from './plugins/primevue'
 import socket from './plugins/socket'
 import apexcharts from './plugins/apexcharts'
 import autocounter from './plugins/autocounter'
@@ -51,12 +51,8 @@ createInertiaApp({
         veevalidate.components.forEach(el => { app.component(el.name, el.val) })
         //register veevalidate
 
-        //Register primevue
-        primevue.components.forEach(el => { app.component(el.name, el.val) })
-        primevue.directive.forEach(el =>{ app.directive(el.name,el.val) })
-        primevue.service.forEach(el =>{ app.use(el) })
-        app.use(primevue.config,{ ripple: true })
-        //Register primevue
+        // Register PrimeVue with theme + components/directives/services.
+        setupPrimeVue(app)
 
         //register custom
         custom.components.forEach(el => { app.component(el.name, el.val) })

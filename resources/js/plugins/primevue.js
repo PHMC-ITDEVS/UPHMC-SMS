@@ -34,7 +34,7 @@ import InputNumber from 'primevue/inputnumber';
 import Checkbox from 'primevue/checkbox';
 import Textarea from 'primevue/textarea';
 import Dropdown from 'primevue/dropdown';
-import Calendar from 'primevue/calendar';
+import DatePicker from 'primevue/datepicker';
 import InputSwitch from 'primevue/inputswitch';
 import Button from 'primevue/button';
 import Skeleton from 'primevue/skeleton';
@@ -45,6 +45,12 @@ import AutoComplete from 'primevue/autocomplete';
 import Timeline from 'primevue/timeline';
 import Popover from 'primevue/popover';
 import FloatLabel from 'primevue/floatlabel';
+import InputGroup from 'primevue/inputgroup';
+import InputGroupAddon from 'primevue/inputgroupaddon';
+
+import Image from 'primevue/image';
+import Avatar from 'primevue/avatar';
+import AvatarGroup from 'primevue/avatargroup'; 
 
 import Ripple from 'primevue/ripple';
 import Tooltip from 'primevue/tooltip';
@@ -67,7 +73,7 @@ const primevue = {
         { name: "p-checkbox", val: Checkbox },
         { name: "p-textarea", val: Textarea },
         { name: "p-dropdown", val: Dropdown },
-        { name: "p-datepicker", val: Calendar },
+        { name: "p-datepicker", val: DatePicker },
         { name: "p-switch", val: InputSwitch },
         { name: "p-button", val: Button },
         { name: "p-skeleton", val: Skeleton },
@@ -80,7 +86,12 @@ const primevue = {
         { name: "p-autocomplete", val: AutoComplete },
         { name: "p-timeline", val: Timeline },
         { name: "p-popover", val: Popover },
-        { name: "p-float-lable", val: FloatLabel },
+        { name: "p-float-label", val: FloatLabel },
+        { name: "p-input-group", val: InputGroup },
+        { name: "p-input-group-addon", val: InputGroupAddon },
+        { name: "p-image", val: Image },
+        { name: "p-avatar", val: Avatar },
+        { name: "p-avatar-group", val: AvatarGroup }
 
     ],
     directive: [
@@ -97,7 +108,7 @@ export function setupPrimeVue(app) {
         theme: {
             preset: Aura,
             options: {
-                prefix: "",
+                prefix: "p",
                 darkModeSelector: false,
             }
         }

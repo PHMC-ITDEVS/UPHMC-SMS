@@ -1,20 +1,20 @@
 <template>
    <div class="page">
+        <app-broadcast />
         <div class="page-main is-expanded">
-
             <div class="app-sidebar__overlay active"></div>
             <aside class="app-sidebar ps ps--active-y" @mouseenter="toggleSideNav('over')" @mouseleave="toggleSideNav('over')">
                 <div class="app-sidebar__logo"> 
                     <a class="header-brand" href="/"> 
-                        <img src="images/default.png" class="header-brand-img desktop-lgo" alt="App logo"> 
-                        <img src="images/default.png" class="header-brand-img dark-logo" alt="App logo"> 
-                        <img src="images/default.png" class="header-brand-img mobile-logo" alt="App logo"> 
-                        <img src="images/default.png" class="header-brand-img darkmobile-logo" alt="App logo"> 
+                        <img src="images/phmc-header.png" class="header-brand-img desktop-lgo" alt="App logo"> 
+                        <img src="images/phmc-header.png" class="header-brand-img dark-logo" alt="App logo"> 
+                        <img src="images/phmc-logo.png" class="header-brand-img mobile-logo" alt="App logo"> 
+                        <img src="images/phmc-logo.png" class="header-brand-img darkmobile-logo" alt="App logo"> 
                     </a> 
                 </div>
                 <div class="app-sidebar3">
                     <ul class="side-menu">
-                        <li v-for="(menu, index) in menus" :key="index">
+                        <li v-for="(menu, index) in visibleMenus" :key="index">
                             <h3>{{ menu?.group }}</h3>
                             <div class="slide" v-for="(item, sub_index) in menu.group_items" :key="sub_index">
                                 <a class="side-menu__item" :class="{'active' : isActive(item.url)}" href="javascript:void(0)" @click="goToPage(item.url)">
@@ -35,10 +35,10 @@
                         <div class="container-fluid">
                             <div class="d-flex">
                                 <a class="header-brand" href="index.html"> 
-                                    <img src="images/default.png" class="header-brand-img desktop-lgo" alt="Logo"> 
-                                    <img src="images/default.png" class="header-brand-img dark-logo" alt="Logo2"> 
-                                    <img src="zendash/img/favicon.ico" class="header-brand-img mobile-logo" alt="logo"> 
-                                    <img src="zendash/img/favicon.ico" class="header-brand-img darkmobile-logo" alt="logo"> 
+                                   <img src="images/phmc-header.png" class="header-brand-img desktop-lgo" alt="App logo"> 
+                                    <img src="images/phmc-header.png" class="header-brand-img dark-logo" alt="App logo"> 
+                                    <img src="images/phmc-banner.png" class="header-brand-img mobile-logo" alt="App logo"> 
+                                    <img src="images/phmc-banner.png" class="header-brand-img darkmobile-logo" alt="App logo">  
                                 </a> 
                                 <div class="app-sidebar__toggle" @click.prevent="toggleSideNav('click')">
                                 <a class="open-toggle" href="#">
@@ -49,17 +49,9 @@
                                 </a>
                                 </div>
                                 <div class="mt-1">
-                                <form class="form-inline">
                                     <div class="search-element">
-                                        <input type="search" class="form-control header-search" placeholder="Search for everything…" aria-label="Search" tabindex="1"> 
-                                        <button class="btn btn-primary-color" type="submit">
-                                            <svg class="header-icon search-icon" x="1008" y="1248" viewBox="0 0 24 24" height="100%" width="100%" preserveAspectRatio="xMidYMid meet" focusable="false">
-                                            <path d="M0 0h24v24H0V0z" fill="none"></path>
-                                            <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
-                                            </svg>
-                                        </button>
+                                        <global-search />
                                     </div>
-                                </form>
                                 </div>
                                 <!-- SEARCH --> 
                                 <div class="d-flex order-lg-2 ml-auto">
@@ -163,37 +155,6 @@
                                         </p-popover>
                                     </div> -->
 
-                                    <!-- Mode -->
-                                    <div class="dropdown header-fullscreen">
-                                        <p-button class="nav-link icon full-screen-link p-0 btn btn-transparent" @click.prevent="toggleNightMode()">
-                                            <svg viewBox="0 0 24 24" fill="none" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg" transform="rotate(0)" v-if="is_night_mode">
-                                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#888888" stroke-width="2.784"></g>
-                                                <g id="SVGRepo_iconCarrier"> 
-                                                    <g clip-path="url(#a)" stroke="#666666" stroke-width="1.5" stroke-miterlimit="10"> 
-                                                        <path d="M5 12H1M23 12h-4M7.05 7.05 4.222 4.222M19.778 19.778 16.95 16.95M7.05 16.95l-2.828 2.828M19.778 4.222 16.95 7.05" stroke-linecap="round"></path> 
-                                                        <path d="M12 16a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="#666666" fill-opacity=".16"></path> 
-                                                        <path d="M12 19v4M12 1v4" stroke-linecap="round"></path> 
-                                                    </g> 
-                                                    <defs> 
-                                                        <clipPath id="a"> 
-                                                            <path fill="#ffffff" d="M0 0h24v24H0z"></path> 
-                                                        </clipPath> 
-                                                    </defs> 
-                                                </g>
-                                            </svg>
-                                            <svg fill="#b5b5b5" viewBox="0 0 46 46" height="100%" width="100%" xmlns="http://www.w3.org/2000/svg" stroke="#b5b5b5" v-else>
-                                                <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                                <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
-                                                <g id="SVGRepo_iconCarrier">
-                                                    <path d="M18.44,34.68a18.22,18.22,0,0,1-2.94-.24,18.18,18.18,0,0,1-15-20.86A18.06,18.06,0,0,1,9.59.63,2.42,2.42,0,0,1,12.2.79a2.39,2.39,0,0,1,1,2.41L11.9,3.1l1.23.22A15.66,15.66,0,0,0,23.34,21h0a15.82,15.82,0,0,0,8.47.53A2.44,2.44,0,0,1,34.47,25,18.18,18.18,0,0,1,18.44,34.68ZM10.67,2.89a15.67,15.67,0,0,0-5,22.77A15.66,15.66,0,0,0,32.18,24a18.49,18.49,0,0,1-9.65-.64A18.18,18.18,0,0,1,10.67,2.89Z"></path>
-                                                </g>
-                                            </svg>
-
-
-                                        </p-button>
-                                    </div>
-                                    
                                     <!-- Fullsceen -->
                                     <div class="dropdown header-fullscreen">
                                         <p-button class="nav-link icon full-screen-link p-0 btn btn-transparent" @click.prevent="toggleFullScreen()">
@@ -206,25 +167,19 @@
                                     <!-- Profile -->
                                     <div class="dropdown profile-dropdown overlay-custom-override_profile">
                                         <a class="nav-link pr-0 pl-2 leading-none" data-toggle="dropdown" href="javascript:void(0);" @click="toggleOverlayPanel($event, 'profile')"> 
-                                            <img src="images/default.png" alt="img" class="avatar avatar-md brround bg-transparent"> 
+                                            <img :src="_account.avatar" alt="img" class="avatar avatar-md brround bg-transparent"> 
                                         </a> 
 
                                         <p-popover ref="profile" class="overlay-profile" appendTo="body">
                                             <div class="">
                                                 <div class="text-center border-bottom pb-4 pt-4">
-                                                    <a href="#" class="text-center user pb-0 font-weight-bold">Logan Oliver</a> 
-                                                    <p class="text-center user-semi-title mb-0">Manage Director</p>
+                                                    <a href="#" class="text-center user pb-0 font-weight-bold">{{ auth_fullname() }}</a> 
+                                                    <p class="text-center user-semi-title mb-0 text-capitalize">{{ auth_position() }}</p>
                                                 </div>
 
-                                                <a class="dropdown-item border-bottom" href="javascript:void(0)"> 
+                                                <a class="dropdown-item border-bottom" href="javascript:void(0)" @click.prevent="goToPage('/profile')"> 
                                                     <i class="dropdown-icon mdi mdi-account-outline"></i> My Profile 
                                                 </a>
-                                                <a class="dropdown-item border-bottom" href="javascript:void(0)"> 
-                                                    <i class="dropdown-icon zmdi zmdi-edit"></i> Edit Profile 
-                                                </a> 
-                                                <a class="dropdown-item border-bottom" href="javascript:void(0)"> 
-                                                    <i class="dropdown-icon  mdi mdi-settings"></i> Account Settings 
-                                                </a> 
                                                 <a class="dropdown-item border-bottom" href="javascript:void(0)" @click.prevent="logout"> 
                                                     <i class="dropdown-icon mdi  mdi-logout-variant"></i> Sign out 
                                                 </a> 
@@ -247,7 +202,7 @@
             <footer class="footer pb-0">
                 <div class="container">
                     <div class="row align-items-center flex-row-reverse">
-                    <div class="col-md-12 col-sm-12 mt-3 mt-lg-0 text-center"> Copyright © 2025 <a href="#">Zendash</a>. Designed by <a href="#">Spruko </a> All rights reserved. </div>
+                        <div class="col-md-12 col-sm-12 mt-3 mt-lg-0 text-center"> Copyright © 2026 <a href="#">UPHMC-SMS</a>. By <a href="#">UPHMC-LP ITWorks </a>. </div>
                     </div>
                 </div>
             </footer>
@@ -268,14 +223,17 @@
 	></p-confirm>
 </template>
 <script>
+import GlobalSearch from '@/components/global-search'
 
 export default {
+    components: {
+        GlobalSearch,
+    },
     data() {
         return {
             html: document.getElementsByTagName("html")[0],
             width: window.innerWidth,
             height: window.innerHeight,
-            is_night_mode: !1,
             profileDropdownShow: !1,
             items: [],
             interval:null,
@@ -283,7 +241,7 @@ export default {
             menus: [
                 {
                     group: "Navigation",
-					role: ["ADMIN"], // for the whole group
+					role: ['*'], // for the whole group
                     group_items: [
 						{ 
 							icon: "home", 
@@ -291,12 +249,12 @@ export default {
 							url: "/", 
 							id: "dashboard", 
 							pending_count: 0, 
-							item_role: ["ADMIN"] // for item
+							item_role: ['*'] // for item
 						}
                     ]
                 },
                 {
-                    group: "Peopple",
+                    group: "Admin Controls",
 					role: ["ADMIN"], // for the whole group
                     group_items: [
 						{ 
@@ -306,6 +264,68 @@ export default {
 							id: "account", 
 							pending_count: 0, 
 							item_role: ["ADMIN"] // for item
+						},
+                        { 
+							icon: "cog-play", 
+							title: "Role", 
+							url: "/role", 
+							id: "role", 
+							pending_count: 0, 
+							item_role: ["ADMIN"] // for item
+						},
+                        { 
+							icon: "office-building-marker", 
+							title: "Department", 
+							url: "/department", 
+							id: "department", 
+							pending_count: 0, 
+							item_role: ["ADMIN"] // for item
+						},
+                        { 
+							icon: "account-network", 
+							title: "Position", 
+							url: "/position", 
+							id: "position", 
+							pending_count: 0, 
+							item_role: ["ADMIN"] // for item
+						},
+                        { 
+							icon: "file-search", 
+							title: "Audit Trail", 
+							url: "/audit-trail", 
+							id: "audit_trail", 
+							pending_count: 0, 
+							item_role: ["ADMIN"] // for item
+						}
+                    ]
+                },
+                {
+                    group: "People",
+					role: ['*'], // for the whole group
+                    group_items: [
+                        { 
+							icon: "contacts", 
+							title: "Phonebook", 
+							url: "/phonebook", 
+							id: "phonebook", 
+							pending_count: 0, 
+							item_role: ['*']
+						},
+                        { 
+							icon: "account-group", 
+							title: "Group", 
+							url: "/group", 
+							id: "group", 
+							pending_count: 0, 
+							item_role: ['ADMIN','MANAGER']
+						},
+                        { 
+							icon: "message-processing", 
+							title: "Sms", 
+							url: "/sms", 
+							id: "sms", 
+							pending_count: 0, 
+							item_role: ['*']
 						}
                     ]
                 }
@@ -317,6 +337,35 @@ export default {
         confirm_dialog_class() {
 			return this.$store.state.confirm_dialog;
 		},
+
+        account(){
+            return this._account();
+        },
+
+        currentRole() {
+            return String(this.$page.props.auth?.user?.role_name || '').toUpperCase();
+        },
+
+        visibleMenus() {
+            return this.menus
+                .map((menu) => {
+                    const items = (menu.group_items || []).filter((item) => this.hasRoleAccess(item.item_role));
+
+                    return {
+                        ...menu,
+                        group_items: items,
+                    };
+                })
+                .filter((menu) => this.hasRoleAccess(menu.role) && menu.group_items.length > 0);
+        },
+
+        allowedPages() {
+            return [
+                '/',
+                '/profile',
+                ...this.visibleMenus.flatMap((menu) => menu.group_items.map((item) => item.url)),
+            ];
+        }
     },
 
     watch: {
@@ -341,10 +390,56 @@ export default {
 
         width() {
             this.adjustSidebar();
+        },
+
+        '$page.url'() {
+            this.enforcePageAccess();
         }
     },
 
     methods: {
+        hasRoleAccess(roles = []) {
+            if (!roles || roles.length === 0) return true;
+
+            const normalizedRoles = roles.map((role) => String(role).toUpperCase());
+
+            if (normalizedRoles.includes('*')) {
+                return true;
+            }
+
+            return normalizedRoles.includes(this.currentRole);
+        },
+
+        normalizePath(path) {
+            if (!path) return '/';
+
+            return path.length > 1 ? path.replace(/\/+$/, '') : path;
+        },
+
+        isPathMatch(allowedPath, currentPath) {
+            const normalizedAllowed = this.normalizePath(allowedPath);
+            const normalizedCurrent = this.normalizePath(currentPath);
+
+            if (normalizedAllowed === '/') {
+                return normalizedCurrent === '/';
+            }
+
+            return normalizedCurrent === normalizedAllowed || normalizedCurrent.startsWith(`${normalizedAllowed}/`);
+        },
+
+        firstAllowedPage() {
+            return this.allowedPages.find((page) => page && page !== '/profile') || '/';
+        },
+
+        enforcePageAccess() {
+            const currentPath = this.normalizePath(window.location.pathname);
+            const isAllowed = this.allowedPages.some((page) => this.isPathMatch(page, currentPath));
+
+            if (!isAllowed) {
+                this.$inertia.visit(this.firstAllowedPage());
+            }
+        },
+
         toggleMenu() { 
             let sidebarNavSize = "default";
 
@@ -445,30 +540,6 @@ export default {
             document.fullscreenElement || document.mozFullScreenElement || document.webkitFullscreenElement ? document.cancelFullScreen ? document.cancelFullScreen() : document.mozCancelFullScreen ? document.mozCancelFullScreen() : document.webkitCancelFullScreen && document.webkitCancelFullScreen() : document.documentElement.requestFullscreen ? document.documentElement.requestFullscreen() : document.documentElement.mozRequestFullScreen ? document.documentElement.mozRequestFullScreen() : document.documentElement.webkitRequestFullscreen && document.documentElement.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT)
         },
 
-        toggleNightMode(val="") {
-            let theme = val || "light";
-
-            if (!val && this.html.getAttribute("data-bs-theme") === "light") theme = "dark";
-
-            // Set localStorage
-            localStorage.setItem("night_mode", theme);
-
-            // Update html data-bs-theme attribute
-            this.html.setAttribute("data-bs-theme", theme);
-
-            // Handle body classes
-            if (theme === "dark") {
-                this.is_night_mode = !1;
-                document.body.classList.add("dark-mode");
-                document.body.classList.remove("light-mode");
-            } 
-            else {
-                this.is_night_mode = !0;
-                document.body.classList.remove("dark-mode");
-                document.body.classList.add("light-mode");
-            }
-        },
-
         isActive(route){
             let curr = window.location.pathname + window.location.search
             return (route == curr) ? true : false;
@@ -502,20 +573,15 @@ export default {
         },
     },
     
-    created() {
-        let self = this;
-        
-        self.items = this.menus.filter(e=>{
-            return e.role.includes(self.$page.props.auth.user.role_name);
-        });
-    },
-
     mounted() {
         this.adjustSidebar();
+        this.enforcePageAccess();
         window.addEventListener('resize', this.getDimensions);
-       
-        const saved_mode = localStorage.getItem("night_mode") || "light";
-        this.toggleNightMode(saved_mode);
+        this.html.setAttribute("data-bs-theme", "light");
+        document.body.classList.remove("dark-mode");
+        document.body.classList.add("light-mode");
+        localStorage.removeItem("night_mode");
+
     },
 
     unmounted() {

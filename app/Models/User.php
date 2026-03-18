@@ -46,7 +46,7 @@ class User extends Authenticatable implements LaratrustUser
         'email_verified_at' => 'datetime',
     ];
 
-    protected $appends = ['role_name'];
+    protected $appends = ['role_name', 'department_name', 'position_name'];
 
     public function setEmailAttribute($value)
     {
@@ -60,7 +60,17 @@ class User extends Authenticatable implements LaratrustUser
 
     public function getRoleNameAttribute()
     {
-        return $this->roles[0]->name;
+        return optional($this->roles->first())->name;
+    }
+
+    public function getDepartmentNameAttribute()
+    {
+        return $this->account?->department?->name;
+    }
+
+    public function getPositionNameAttribute()
+    {
+        return $this->account?->position?->name;
     }
 
     public function account()

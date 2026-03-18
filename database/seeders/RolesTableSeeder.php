@@ -24,19 +24,9 @@ class RolesTableSeeder extends Seeder
                 'description' => 'Complete access to system', 
             ],
             [
-                'name' => 'sub_admin',
-                'display_name' => 'SUB ADMIN', 
-                'description' => 'Partial access to system',
-            ],
-            [
                 'name' => 'manager',
                 'display_name' => 'MANAGER',
                 'description' => 'Responsible for overseeing a specific department, Duties may include task delegation, planning, performance monitoring, coaching, and decision-making',
-            ],
-            [
-                'name' => 'player',
-                'display_name' => 'PLAYER',
-                'description' => '',
             ],
         ];
 
