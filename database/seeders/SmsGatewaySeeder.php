@@ -24,7 +24,7 @@ class SmsGatewaySeeder extends Seeder
                 'priority'  => 1,
                 'config'    => [
                     'port'           => $defaultPort,
-                    'baud_rate'      => 9600,
+                    'baud_rate'      => 115200,
                     'timeout'        => 10,
                     'max_sms_length' => 160,
                 ],

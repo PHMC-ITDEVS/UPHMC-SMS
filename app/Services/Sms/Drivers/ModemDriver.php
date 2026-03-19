@@ -5,61 +5,55 @@ namespace App\Services\Sms\Drivers;
 use App\Services\Sms\AtCommandRunner;
 use App\Services\Sms\Contracts\SmsGatewayInterface;
 use App\Services\Sms\Exceptions\ModemException;
-use App\Services\Sms\ModemConnectionManager;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
  * Sends SMS via Itegno W3800U using AT commands.
  *
- * AT Command flow:
- *   1. AT              → OK     (ping)
- *   2. AT+CMGF=1       → OK     (text mode)
- *   3. AT+CSCS="GSM"   → OK     (character set)
- *   4. AT+CMGS="<to>"  → >      (start SMS, wait for prompt)
- *   5. <body>+chr(26)  → +CMGS  (send, Ctrl+Z terminates)
+ * ON WINDOWS:
+ *   Delegates to scripts/sms/sms_send.py via Python + pyserial.
  *
- * Config keys (from sms_gateways.config JSONB):
- *   port, baud_rate, timeout, max_sms_length
+ *   PHP fopen() streams on Windows COM ports block unconditionally regardless
+ *   of stream_set_blocking(), stream_set_timeout(), or stream_select() — the
+ *   Windows UART driver ignores all of these and uses its own internal timeout
+ *   (default ~60 seconds). The only way to configure this is via the Win32
+ *   SetCommTimeouts() API, which PHP cannot call.
+ *
+ *   pyserial calls SetCommTimeouts() directly and also correctly asserts the
+ *   DTR signal (dsrdtr=True) which is required for the Itegno W3800U to
+ *   respond to AT commands at all.
+ *
+ * ON UNIX/macOS:
+ *   Uses AtCommandRunner directly — PHP streams work correctly on Unix serial
+ *   ports via stty configuration.
+ *
+ * Setup (one-time, Windows):
+ *   pip install -r scripts/sms/requirements.txt
+ *
+ * Setup (one-time, Unix):
+ *   No extra dependencies needed.
  */
 class ModemDriver implements SmsGatewayInterface
 {
-    private ModemConnectionManager $connectionManager;
+    public function __construct(private readonly array $config) {}
 
-    public function __construct(private readonly array $config)
-    {
-        $this->connectionManager = new ModemConnectionManager(
-            port: $this->getPort(),
-            baudRate: (int) ($config['baud_rate'] ?? 9600),
-        );
-    }
+    // ── SmsGatewayInterface ───────────────────────────────────────────────────
 
     public function send(string $to, string $message): array
     {
         $reference = Str::uuid()->toString();
-
-        if (! $this->isPortAvailable()) {
-            return [
-                'success'   => false,
-                'gateway'   => $this->getName(),
-                'reference' => null,
-                'error'     => 'modem_disconnected',
-            ];
-        }
-
-        if (! $this->connectionManager->acquire()) {
-            return [
-                'success'   => false,
-                'gateway'   => $this->getName(),
-                'reference' => null,
-                'error'     => 'modem_busy',
-            ];
-        }
+        Log::info("[ModemDriver] Starting send to {$to}", [
+            'reference' => $reference,
+            'gateway'   => $this->getName(),
+        ]);
 
         try {
-            $runner = $this->connectionManager->getRunner();
-            $this->initializeModem($runner);
-            $this->sendSmsCommand($runner, $to, $message);
+            if (PHP_OS_FAMILY === 'Windows') {
+                $this->sendViaPython($to, $message);
+            } else {
+                $this->sendViaPhp($to, $message);
+            }
 
             Log::info("[ModemDriver] SMS sent to {$to}", [
                 'reference' => $reference,
@@ -76,68 +70,160 @@ class ModemDriver implements SmsGatewayInterface
         } catch (ModemException $e) {
             Log::error("[ModemDriver] Send failed to {$to}: {$e->getMessage()}");
 
+            $isDisconnected = str_contains($e->getMessage(), 'not found')
+                || str_contains($e->getMessage(), 'Could not open')
+                || str_contains($e->getMessage(), 'Permission denied')
+                || str_contains($e->getMessage(), 'not accessible')
+                || str_contains($e->getMessage(), 'could not open port');
+
             return [
                 'success'   => false,
                 'gateway'   => $this->getName(),
                 'reference' => null,
-                'error'     => $e->getMessage(),
+                'error'     => $isDisconnected ? 'modem_disconnected' : $e->getMessage(),
             ];
-
-        } finally {
-            $this->connectionManager->release();
         }
     }
 
     public function isHealthy(): bool
     {
-        if (! $this->isPortAvailable()) {
-            return false;
-        }
-
-        if (! $this->connectionManager->acquire()) {
-            return true; // busy but alive
-        }
-
         try {
-            $response = $this->connectionManager->getRunner()->send('AT', 'OK', 5);
-            return str_contains($response, 'OK');
-        } catch (ModemException) {
+            if (PHP_OS_FAMILY === 'Windows') {
+                return $this->pingViaPython();
+            }
+            return $this->pingViaPhp();
+        } catch (\Throwable) {
             return false;
-        } finally {
-            $this->connectionManager->release();
         }
     }
 
     public function getName(): string
     {
-        return 'modem:' . $this->getPort();
+        return 'modem:' . ($this->config['port'] ?? 'unknown');
     }
 
-    private function initializeModem(AtCommandRunner $runner): void
+    // ── Windows — Python/pyserial ─────────────────────────────────────────────
+
+    private function sendViaPython(string $to, string $message): void
     {
-        $runner->send('AT', 'OK');
-        $runner->send('AT+CMGF=1', 'OK');
-        $runner->send('AT+CSCS="GSM"', 'OK');
-    }
+        $script  = $this->getPythonScriptPath();
+        $port    = $this->getPort();
+        $baud    = (int) ($this->config['baud_rate']      ?? 115200);
+        $timeout = (int) ($this->config['timeout']         ?? 10);
+        $maxLen  = (int) ($this->config['max_sms_length']  ?? 160);
+        $body    = mb_substr($message, 0, $maxLen);
 
-    private function sendSmsCommand(AtCommandRunner $runner, string $to, string $message): void
-    {
-        $body = mb_substr($message, 0, (int) ($this->config['max_sms_length'] ?? 160));
+        $cmd = sprintf(
+            'python %s --port %s --baud %d --to %s --message %s --timeout %d --max-len %d 2>&1',
+            escapeshellarg($script),
+            escapeshellarg($port),
+            $baud,
+            escapeshellarg($to),
+            escapeshellarg($body),
+            $timeout,
+            $maxLen
+        );
 
-        $runner->send('AT+CMGS="' . $to . '"', '>');
+        exec($cmd, $output, $exitCode);
 
-        $response = $runner->sendRaw($body . chr(26));
+        $outputStr = implode("\n", $output);
 
-        if (! str_contains($response, '+CMGS:')) {
-            throw ModemException::sendFailed($to, 'No +CMGS confirmation received.');
+        if ($exitCode !== 0) {
+            throw new ModemException(
+                "Python SMS script failed (exit {$exitCode}): {$outputStr}"
+            );
+        }
+
+        if (! str_contains($outputStr, 'OK:')) {
+            throw new ModemException(
+                "Unexpected Python script output: {$outputStr}"
+            );
         }
     }
 
-    private function isPortAvailable(): bool
+    private function pingViaPython(): bool
     {
         $port = $this->getPort();
+        $baud = (int) ($this->config['baud_rate'] ?? 115200);
 
-        return $port !== '' && file_exists($port);
+        // Pass port as sys.argv[1] to avoid shell quoting issues with COM port names
+        $cmd = sprintf(
+            'python -c "import sys,serial; s=serial.Serial(sys.argv[1],%d,timeout=3,dsrdtr=True); s.close(); print(\'OK\')" %s 2>&1',
+            $baud,
+            escapeshellarg($port)
+        );
+
+        exec($cmd, $output, $code);
+
+        return $code === 0 && str_contains(implode('', $output), 'OK');
+    }
+
+    /**
+     * Get the absolute path to scripts/sms/sms_send.py.
+     *
+     * @throws ModemException if script is missing
+     */
+    private function getPythonScriptPath(): string
+    {
+        $path = base_path('scripts/sms/sms_send.py');
+
+        if (! file_exists($path)) {
+            throw new ModemException(
+                "SMS Python script not found at [{$path}]. " .
+                "Ensure scripts/sms/sms_send.py exists in the project root. " .
+                "Install dependencies: pip install -r scripts/sms/requirements.txt"
+            );
+        }
+
+        return $path;
+    }
+
+    // ── Unix/macOS — PHP AtCommandRunner ─────────────────────────────────────
+
+    private function sendViaPhp(string $to, string $message): void
+    {
+        $runner = $this->makeRunner();
+        $runner->open();
+
+        try {
+            $runner->send('AT', 'OK');
+            $runner->send('AT+CMGF=1', 'OK');
+            $runner->send('AT+CSCS="GSM"', 'OK');
+
+            $body = mb_substr($message, 0, (int) ($this->config['max_sms_length'] ?? 160));
+            $runner->send('AT+CMGS="' . $to . '"', '>');
+
+            $response = $runner->sendRaw($body . chr(26));
+
+            if (! str_contains($response, '+CMGS:')) {
+                throw ModemException::sendFailed($to, 'No +CMGS confirmation received.');
+            }
+        } finally {
+            $runner->close();
+        }
+    }
+
+    private function pingViaPhp(): bool
+    {
+        $runner = $this->makeRunner();
+        try {
+            $runner->open();
+            $response = $runner->send('AT', 'OK', 5);
+            return str_contains($response, 'OK');
+        } catch (ModemException) {
+            return false;
+        } finally {
+            $runner->close();
+        }
+    }
+
+    private function makeRunner(): AtCommandRunner
+    {
+        return new AtCommandRunner(
+            port:     $this->getPort(),
+            baudRate: (int) ($this->config['baud_rate'] ?? 115200),
+            timeout:  (int) ($this->config['timeout']   ?? 10),
+        );
     }
 
     private function getPort(): string

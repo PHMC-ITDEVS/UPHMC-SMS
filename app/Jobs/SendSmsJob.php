@@ -20,9 +20,10 @@ use Illuminate\Support\Facades\Log;
  * Processes a single SMS recipient. One job = one recipient = one SMS.
  *
  * RETRY STRATEGY:
- *   - modem_busy      → re-release to queue with 30s delay (not a failure attempt)
- *   - send failure    → Laravel retries up to $tries times with backoff
- *   - max retries hit → failed() hook marks recipient as permanently failed
+ *   - modem_busy        → re-release to queue with 30s delay (not a failure attempt)
+ *   - modem_disconnected→ permanently mark failed, do NOT retry
+ *   - send failure      → Laravel retries up to $tries times with backoff
+ *   - max retries hit   → failed() hook marks recipient as permanently failed
  *
  * QUEUE:
  *   Use a dedicated 'sms' queue so SMS jobs don't compete with other jobs.
@@ -39,7 +40,6 @@ class SendSmsJob implements ShouldQueue
 
     /**
      * Maximum attempts before job is marked as failed.
-     * Covers transient modem errors (line busy, signal drop, etc.)
      */
     public int $tries = 3;
 
@@ -50,9 +50,9 @@ class SendSmsJob implements ShouldQueue
 
     /**
      * Seconds before job is considered timed out.
-     * Must be longer than AT command timeout (10s) + lock wait.
+     * Must be longer than AT command timeout (10s) + lock wait + stty config.
      */
-    public int $timeout = 90;
+    public int $timeout = 120;
 
     public function __construct(
         private readonly int $recipientId
@@ -63,7 +63,7 @@ class SendSmsJob implements ShouldQueue
         $recipient = $this->loadRecipient();
 
         if ($recipient === null) {
-            // Record deleted — nothing to do, discard job
+            // Record deleted — nothing to do, discard job silently
             return;
         }
 
@@ -92,17 +92,23 @@ class SendSmsJob implements ShouldQueue
             return;
         }
 
+        // Modem physically disconnected — don't retry, mark immediately failed
         if (! $result['success'] && $result['error'] === 'modem_disconnected') {
             Log::warning("[SendSmsJob] Modem not connected for recipient #{$this->recipientId}");
-            $recipient->markFailed('system', 'Modem device not connected.');
+            $recipient->markFailed(
+                gatewayUsed: $result['gateway'],
+                errorMessage: 'Modem device not connected or port unavailable.'
+            );
             return;
         }
 
-        // Success
+        // FIX: markSent() expects ($gatewayUsed, $gatewayResponse)
+        // Previously this called markSent(gateway: ..., reference: ...) which
+        // caused a PHP named argument mismatch error, failing the job silently.
         if ($result['success']) {
             $recipient->markSent(
-                gateway: $result['gateway'],
-                reference: $result['reference']
+                gatewayUsed:     $result['gateway'],
+                gatewayResponse: $result['reference'],
             );
 
             Log::info("[SendSmsJob] SMS sent to {$recipient->phone_number}", [
@@ -133,7 +139,6 @@ class SendSmsJob implements ShouldQueue
 
     /**
      * Called by Laravel when all retry attempts are exhausted.
-     * Permanently marks the recipient as failed.
      */
     public function failed(\Throwable $exception): void
     {
@@ -146,8 +151,8 @@ class SendSmsJob implements ShouldQueue
         }
 
         $recipient->markFailed(
-            'system',
-            $exception->getMessage()
+            gatewayUsed:  'system',
+            errorMessage: $exception->getMessage(),
         );
     }
 

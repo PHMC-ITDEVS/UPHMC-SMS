@@ -30,7 +30,7 @@ class FileController extends Controller
     {
         try
         {
-            Log::info("[UPLOAD_IMAGE][$folder_name][$id]");
+            // Log::info("[UPLOAD_IMAGE][$folder_name][$id]");
             $file = static::decodeBase64Payload($base64);
             $extension = static::extractBase64Extension($base64);
 
@@ -47,7 +47,7 @@ class FileController extends Controller
     {
         $is_accounts = (bool)($folder == 'accounts');
         $file_id = $is_accounts ? $file_id : Helper::decrypt($file_id);
-        Log::info("[VIEW_IMAGE1][$folder][$file_id]");
+        // Log::info("[VIEW_IMAGE1][$folder][$file_id]");
 
         $file_path = null;
         foreach (['jpg', 'jpeg', 'png', 'svg', 'webp'] as $extension) 

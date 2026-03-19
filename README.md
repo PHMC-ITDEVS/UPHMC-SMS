@@ -39,12 +39,14 @@ Relevant processes:
 - Vite frontend
 - Node socket server
 - Laravel queue worker
+- Python SMS sender on Windows
 
 ## Requirements
 
 - PHP 8.1+
 - Composer
 - Node.js + npm
+- Python 3
 - PostgreSQL
 - Redis
 
@@ -68,6 +70,12 @@ Create the environment file:
 cp .env.example .env
 ```
 
+Set up the Windows modem sender:
+
+```bash
+php artisan sms:setup-modem
+```
+
 Generate the app key:
 
 ```bash
@@ -78,12 +86,6 @@ Run migrations:
 
 ```bash
 php artisan migrate
-```
-
-Seed base data:
-
-```bash
-php artisan db:seed
 ```
 
 ## Local Development
@@ -118,41 +120,7 @@ Recommended single-worker SMS variant:
 php artisan queue:work --queue=sms --sleep=3 --tries=3 --max-jobs=50
 ```
 
-## Environment Notes
-
-Important values to review in `.env`:
-
-- `APP_URL`
-- `DB_CONNECTION`, `DB_HOST`, `DB_PORT`, `DB_DATABASE`, `DB_USERNAME`, `DB_PASSWORD`
-- `QUEUE_CONNECTION`
-- `REDIS_HOST`, `REDIS_PORT`, `REDIS_PASSWORD`, `REDIS_PREFIX`
-- `SOCKET_HOST`, `SOCKET_PORT`
-- `VITE_SOCKET_URL` or `VITE_SOCKET_PORT`
-
-If you want queued jobs to run asynchronously, do not leave:
-
-```env
-QUEUE_CONNECTION=sync
-```
-
-Use `database` or `redis` instead.
-
-## Seeding
-
-Current seeders include:
-
-- roles and permissions
-- departments
-- positions
-- default accounts
-- SMS gateways
-
-Run a specific seeder:
-
-```bash
-php artisan db:seed --class=DepartmentsTableSeeder
-php artisan db:seed --class=PositionsTableSeeder
-```
+On Windows, SMS sending uses [scripts/sms/sms_send.py](c:\xampp\htdocs\uphmc-sms\scripts\sms\sms_send.py) via `pyserial` instead of PHP serial streams.
 
 ## Common Commands
 
@@ -191,4 +159,4 @@ Laratrust is used for roles and permissions.
 
 ## License
 
-This project is licensed under the MIT License. See [LICENSE](/Users/ferd/Sites/uphmc-sms/LICENSE).
+This project is licensed under the MIT License. See [LICENSE](c:\xampp\htdocs\uphmc-sms\LICENSE).
