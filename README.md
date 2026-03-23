@@ -26,6 +26,7 @@ UPHMC-SMS is a Laravel + Inertia + Vue 3 application for account management, pho
 - Group
 - SMS
 - Audit Trail
+- API Clients
 
 ## Realtime Flow
 
@@ -121,6 +122,75 @@ php artisan queue:work --queue=sms --sleep=3 --tries=3 --max-jobs=50
 ```
 
 On Windows, SMS sending uses [scripts/sms/sms_send.py](c:\xampp\htdocs\uphmc-sms\scripts\sms\sms_send.py) via `pyserial` instead of PHP serial streams.
+
+## SMS API
+
+The project includes an admin-managed SMS API client module for external systems.
+
+Admin flow:
+
+1. Open the `API Clients` module.
+2. Create an API client.
+3. Copy the generated bearer token immediately.
+4. Use that token in your external system.
+
+Bearer token format:
+
+```text
+Authorization: Bearer CLIENTKEY.RAWSECRET
+```
+
+Required headers:
+
+```text
+Accept: application/json
+Content-Type: application/json
+```
+
+Send SMS:
+
+```bash
+curl -X POST http://your-app.test/api/v1/sms/send \
+  -H "Authorization: Bearer CLIENTKEY.RAWSECRET" \
+  -H "Accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "body": "Hello from API",
+    "recipients": [
+      { "type": "number", "value": "09171234567" }
+    ],
+    "send_type": "immediate"
+  }'
+```
+
+Supported recipient types:
+
+- `number`
+- `contact`
+- `group`
+
+Check SMS status:
+
+```bash
+curl -X GET http://your-app.test/api/v1/sms/123/status \
+  -H "Authorization: Bearer CLIENTKEY.RAWSECRET" \
+  -H "Accept: application/json"
+```
+
+Sample API response:
+
+```json
+{
+  "status": 1,
+  "message": "SMS queued successfully.",
+  "data": {
+    "message_id": 123,
+    "source": "api",
+    "scheduled": false,
+    "recipients": 1
+  }
+}
+```
 
 ## Common Commands
 

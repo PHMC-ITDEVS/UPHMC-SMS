@@ -21,6 +21,14 @@ export default {
         return API.apiClient.post(`${route}/create`, payload);
     },
 
+    async import(payload) {
+        return API.apiClient.post(`${route}/import`, payload, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+
     async update (payload, id) {
         return API.apiClient.post(`${route}/update/${id}`, payload);
     },

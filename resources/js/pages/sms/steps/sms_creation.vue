@@ -50,6 +50,14 @@
                 />
                 <label for="Message">Compose Message</label>
             </p-float-label>
+            <div class="d-flex justify-content-between align-items-center mt-1">
+                <small class="text-muted">
+                    Spaces and line breaks are counted as part of the message.
+                </small>
+                <small class="text-muted">
+                    {{ characterCount }} character{{ characterCount !== 1 ? 's' : '' }}
+                </small>
+            </div>
             <small class="p-error">{{ errors[0] }}</small>
         </v-field>
         
@@ -87,6 +95,12 @@
                 });
 
                 this.data.scheduled = this.data.send_type === 'scheduled';
+            },
+        },
+
+        computed: {
+            characterCount() {
+                return (this.data.body || '').length;
             },
         },
 

@@ -7,6 +7,7 @@ use App\Http\Controllers\FileController;
 use App\Http\Controllers\GlobalSearchController;
 
 use App\Http\Controllers\AccountController;
+use App\Http\Controllers\ApiClientController;
 use App\Http\Controllers\AuditTrailController;
 use App\Http\Controllers\ContactGroupController;
 use App\Http\Controllers\DashboardController;
@@ -53,6 +54,17 @@ Route::middleware(['auth', 'route.access'])->group(function ()
         Route::get('data/{id}', [AuditTrailController::class, 'get'])->name('audit-trail.get');
     });
 
+    Route::group(array('prefix' => 'api-client', 'middleware' => []), function() {
+        Route::get('/', [ApiClientController::class,'index'])->name('api-client.index');
+        Route::get('all', [ApiClientController::class, 'list'])->name('api-client.list');
+        Route::post('create', [ApiClientController::class, 'create'])->name('api-client.create');
+        Route::post('validate', [ApiClientController::class, 'validateRequest'])->name('api-client.validate');
+        Route::get('data/{id}', [ApiClientController::class, 'get'])->name('api-client.get');
+        Route::post('update/{id}', [ApiClientController::class, 'update'])->name('api-client.update');
+        Route::post('regenerate-secret/{id}', [ApiClientController::class, 'regenerateSecret'])->name('api-client.regenerate_secret');
+        Route::post('delete/{id}', [ApiClientController::class, 'destroy'])->name('api-client.destroy');
+    });
+
     Route::group(array('prefix' => 'role', 'middleware' => []), function() {
         Route::get('/', [RoleController::class,'index'])->name('role.index');
         Route::get('all', [RoleController::class, 'list'])->name('role.list');
@@ -90,7 +102,9 @@ Route::middleware(['auth', 'route.access'])->group(function ()
     {
         Route::get('/', [PhonebookController::class, 'index'])->name('phonebook.index');
         Route::get('all', [PhonebookController::class, 'list'])->name('phonebook.list');
+        Route::get('template', [PhonebookController::class, 'template'])->name('phonebook.template');
         Route::post('create', [PhonebookController::class, 'create'])->name('phonebook.create');
+        Route::post('import', [PhonebookController::class, 'import'])->name('phonebook.import');
         Route::post('validate', [PhonebookController::class, 'validateRequest'])->name('phonebook.validate');
         Route::get('data/{id}', [PhonebookController::class, 'get'])->name('phonebook.get');
         Route::post('update/{id}', [PhonebookController::class, 'update'])->name('phonebook.update');

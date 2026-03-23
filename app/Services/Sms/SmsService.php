@@ -37,10 +37,12 @@ class SmsService
         string $body,
         array $recipients,
         int $senderId,
-        ?int $gatewayId = null
+        ?int $gatewayId = null,
+        ?int $apiClientId = null,
+        string $source = 'web'
     ): SmsMessage {
-        return DB::transaction(function () use ($body, $recipients, $senderId, $gatewayId) {
-            $message = $this->createMessage($body, $senderId, $gatewayId, count($recipients));
+        return DB::transaction(function () use ($body, $recipients, $senderId, $gatewayId, $apiClientId, $source) {
+            $message = $this->createMessage($body, $senderId, $gatewayId, count($recipients), null, SmsStatus::PROCESSING, $apiClientId, $source);
 
             foreach ($recipients as $recipientData) {
                 $recipient = SmsRecipient::create([
@@ -159,16 +161,20 @@ class SmsService
         array $recipients,
         int $senderId,
         \Carbon\Carbon $scheduledAt,
-        ?int $gatewayId = null
+        ?int $gatewayId = null,
+        ?int $apiClientId = null,
+        string $source = 'web'
     ): SmsMessage {
-        return DB::transaction(function () use ($body, $recipients, $senderId, $scheduledAt, $gatewayId) {
+        return DB::transaction(function () use ($body, $recipients, $senderId, $scheduledAt, $gatewayId, $apiClientId, $source) {
             $message = $this->createMessage(
                 body: $body,
                 senderId: $senderId,
                 gatewayId: $gatewayId,
                 totalRecipients: count($recipients),
                 scheduledAt: $scheduledAt,
-                status: SmsStatus::DRAFT   // stays draft until dispatch time
+                status: SmsStatus::DRAFT,   // stays draft until dispatch time
+                apiClientId: $apiClientId,
+                source: $source
             );
 
             $delay = now()->diffInSeconds($scheduledAt);
@@ -243,14 +249,18 @@ class SmsService
         ?int $gatewayId,
         int $totalRecipients,
         ?\Carbon\Carbon $scheduledAt = null,
-        SmsStatus $status = SmsStatus::PROCESSING
+        SmsStatus $status = SmsStatus::PROCESSING,
+        ?int $apiClientId = null,
+        string $source = 'web'
     ): SmsMessage {
         return SmsMessage::create([
+            'api_client_id'     => $apiClientId,
             'message_body'      => $body,
             'sender_id'         => $senderId,
             'type'              => $scheduledAt ? 'scheduled' : 'immediate',
             'gateway_id'        => $gatewayId,
             'status'            => $status,
+            'source'            => $source,
             'total_recipients'  => $totalRecipients,
             'sent_count'        => 0,
             'failed_count'      => 0,

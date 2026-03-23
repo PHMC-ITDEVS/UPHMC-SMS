@@ -12,6 +12,7 @@ class AuthorizeRouteAccess
         'account.' => Permission::MANAGE_USERS->value,
         'department.' => Permission::MANAGE_USERS->value,
         'position.' => Permission::MANAGE_USERS->value,
+        'api-client.' => Permission::MANAGE_GATEWAYS->value,
         'role.' => Permission::MANAGE_ROLES->value,
         'audit-trail.' => Permission::MANAGE_ROLES->value,
         'phonebook.' => Permission::MANAGE_CONTACTS->value,

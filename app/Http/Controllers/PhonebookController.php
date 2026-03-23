@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Imports\ContactsImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
@@ -179,5 +181,48 @@ class PhonebookController extends Controller
         Contact::whereIn('id', $ids)->delete();
 
         return response()->json(["status" => 1, "message" => "Selected contacts deleted successfully!"], 200);
+    }
+
+    public function import(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'file' => ['required', 'file', 'mimes:csv,txt,xlsx,xls'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'status' => 0,
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $import = new ContactsImport(Auth::id());
+
+        Excel::import($import, $request->file('file'));
+
+        return response()->json([
+            'status' => 1,
+            'message' => 'Contacts imported successfully.',
+            'summary' => [
+                'imported' => $import->imported,
+                'skipped' => $import->skipped,
+                'errors' => $import->errors,
+            ],
+        ], 200);
+    }
+
+    public function template()
+    {
+        $content = implode("\n", [
+            'name,phone_number,notes',
+            'Juan Dela Cruz,09171234567,Sample contact',
+            'Maria Santos,639181234567,VIP contact',
+            'Pedro Reyes,9181234567,',
+        ]);
+
+        return response($content, 200, [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="contacts_import_template.csv"',
+        ]);
     }
 }

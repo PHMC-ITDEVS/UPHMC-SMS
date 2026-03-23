@@ -2,11 +2,14 @@
     <div class="gs-root" :class="{ 'gs-root--open': isOpen, 'gs-root--loading': isLoading }">
         <!-- Trigger -->
         <button class="gs-trigger" @click="open" aria-label="Open search">
-            <svg class="gs-trigger__icon" viewBox="0 0 20 20" fill="none">
-                <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-            </svg>
-            <span class="gs-trigger__label">Search</span>
+            <div class="d-flex flex-row gap-1 align-items-center">
+                <svg class="gs-trigger__icon" viewBox="0 0 20 20" fill="none">
+                    <circle cx="8.5" cy="8.5" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M13 13l3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+                <span class="gs-trigger__label">Search</span>
+            </div>
+            
             <kbd class="gs-trigger__kbd">⌘K</kbd>
         </button>
 
@@ -358,6 +361,8 @@ export default defineComponent({
     cursor: pointer;
     transition: background 0.15s, border-color 0.15s, color 0.15s;
     white-space: nowrap;
+    justify-content: space-between;
+    width: 100%;
 }
 .gs-trigger:hover {
     background: #e8ebf0;

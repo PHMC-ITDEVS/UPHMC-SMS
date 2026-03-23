@@ -54,9 +54,9 @@
                             <label class="text-muted mb-0">Remember me</label> 
                         </v-field>
 
-                        <div class="form-group mb-0"> 
+                        <!-- <div class="form-group mb-0"> 
                             <a href="/forgot-password" class="text-muted">Forgot password?</a> 
-                        </div>
+                        </div> -->
                     </div>
 
                     <div class="mt-5"> 

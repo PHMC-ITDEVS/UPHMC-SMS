@@ -296,6 +296,14 @@ export default {
 							id: "audit_trail", 
 							pending_count: 0, 
 							item_role: ["ADMIN"] // for item
+						},
+                        { 
+							icon: "api", 
+							title: "API Clients", 
+							url: "/api-client", 
+							id: "api_client", 
+							pending_count: 0, 
+							item_role: ["ADMIN"] // for item
 						}
                     ]
                 },

@@ -306,6 +306,32 @@ export default {
             )
         },
 
+        sms_status(status) {
+            const value = String(status || '').toUpperCase();
+
+            if (['DONE', 'SENT'].includes(value)) {
+                return 'badge bg-success-subtle text-success border border-success-subtle';
+            }
+
+            if (['PROCESSING'].includes(value)) {
+                return 'badge bg-info-subtle text-info border border-info-subtle';
+            }
+
+            if (['QUEUED', 'PENDING'].includes(value)) {
+                return 'badge bg-warning-subtle text-warning border border-warning-subtle';
+            }
+
+            if (['DRAFT'].includes(value)) {
+                return 'badge bg-secondary-subtle text-secondary border border-secondary-subtle';
+            }
+
+            if (['FAILED', 'CANCELLED'].includes(value)) {
+                return 'badge bg-danger-subtle text-danger border border-danger-subtle';
+            }
+
+            return 'badge bg-light text-dark border';
+        },
+
         getError(error, render_bad_request=false)  {
             const error_message = import.meta.env.VITE_DEFAULT_ERROR_MESSAGE;
 

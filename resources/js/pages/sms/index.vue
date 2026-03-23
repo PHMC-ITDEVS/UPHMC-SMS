@@ -44,7 +44,9 @@
                                 </p-column>
                                 <p-column header="Message">
                                     <template #body="{data}">
-                                        {{ data.message_body }}
+                                        <div class="sms-message-clamp" :title="data.message_body">
+                                            {{ data.message_body }}
+                                        </div>
                                     </template>
                                 </p-column>
                                 <p-column header="Recipient">
@@ -76,7 +78,9 @@
                                 </p-column>
                                 <p-column header="status">
                                     <template #body="{data}">
-                                        <span class="text-capitalize">{{ data.status }}</span>
+                                        <span class="text-capitalize" :class="sms_status(data.status)">
+                                            {{ data.status }}
+                                        </span>
                                     </template>
                                 </p-column>
                                 
@@ -384,3 +388,16 @@
         }
     };
 </script>
+
+<style scoped>
+.sms-message-clamp {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    white-space: pre-wrap;
+    word-break: break-word;
+    line-height: 1.45;
+    max-width: 320px;
+}
+</style>

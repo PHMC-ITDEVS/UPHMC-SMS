@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\SmsApiController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\ServiceProviderController;
 use App\Http\Controllers\Api\TransactionController;
@@ -19,4 +20,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+Route::prefix('v1')->middleware(['api.client'])->group(function () {
+    Route::post('sms/send', [SmsApiController::class, 'send']);
+    Route::get('sms/{id}/status', [SmsApiController::class, 'status']);
 });

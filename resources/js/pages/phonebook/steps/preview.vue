@@ -13,7 +13,7 @@
                     alt="Contact Avatar"
                     class="avatar-image"
                 />
-                <div v-else class="avatar-placeholder d-flex align-items-center justify-content-center">
+                <div v-else class="avatar-placeholder d-flex align-items-center justify-content-center no-image-width">
                     <i class="pi pi-user text-2xl"></i>
                 </div>
             </div>
@@ -113,6 +113,10 @@
 
     .avatar-placeholder {
         color: #7a8b99;
+    }
+
+    .no-image-width {
+        width: 140px;
     }
 
     .preview-item label {

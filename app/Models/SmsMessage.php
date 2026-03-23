@@ -17,9 +17,11 @@ class SmsMessage extends Model
 
     protected $fillable = [
         'sender_id',
+        'api_client_id',
         'message_body',
         'type',
         'status',
+        'source',
         'gateway_id',
         'fallback_gateway_id',
         'scheduled_at',
@@ -61,6 +63,11 @@ class SmsMessage extends Model
     public function gateway(): BelongsTo
     {
         return $this->belongsTo(SmsGateway::class, 'gateway_id');
+    }
+
+    public function apiClient(): BelongsTo
+    {
+        return $this->belongsTo(ApiClient::class);
     }
 
     public function fallbackGateway(): BelongsTo
