@@ -111,7 +111,7 @@ class ModemDriver implements SmsGatewayInterface
         $baud    = (int) ($this->config['baud_rate']      ?? 115200);
         $timeout = (int) ($this->config['timeout']         ?? 10);
         $maxLen  = (int) ($this->config['max_sms_length']  ?? 160);
-        $body    = mb_substr($message, 0, $maxLen);
+        $body    = mb_substr($this->normalizeSmsBody($message), 0, $maxLen);
         $bodyB64 = base64_encode($body);
 
         $cmd = sprintf(
@@ -191,7 +191,11 @@ class ModemDriver implements SmsGatewayInterface
             $runner->send('AT+CMGF=1', 'OK');
             $runner->send('AT+CSCS="GSM"', 'OK');
 
-            $body = mb_substr($message, 0, (int) ($this->config['max_sms_length'] ?? 160));
+            $body = mb_substr(
+                $this->normalizeSmsBody($message),
+                0,
+                (int) ($this->config['max_sms_length'] ?? 160)
+            );
             $runner->send('AT+CMGS="' . $to . '"', '>');
 
             $response = $runner->sendRaw($body . chr(26));
@@ -236,5 +240,13 @@ class ModemDriver implements SmsGatewayInterface
         }
 
         return $port;
+    }
+
+    /**
+     * Normalize web textarea newlines into modem-friendly SMS line breaks.
+     */
+    private function normalizeSmsBody(string $message): string
+    {
+        return preg_replace("/\r\n|\r|\n/", "\r\n", $message) ?? $message;
     }
 }
