@@ -20,7 +20,7 @@ class SmsApiController extends Controller
     public function send(Request $request): JsonResponse
     {
         $validator = Validator::make($request->all(), [
-            'body' => ['required', 'string', 'max:1600'],
+            'body' => ['required', 'string', 'max:160'],
             'recipients' => ['required', 'array', 'min:1'],
             'recipients.*.type' => ['required', 'string', 'in:number,contact,group'],
             'recipients.*.value' => ['required'],

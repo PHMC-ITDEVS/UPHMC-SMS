@@ -24,11 +24,13 @@ class SmsRecipient extends Model
         'error_message',
         'gateway_used',
         'sent_at',
+        'dispatch_at',
     ];
 
     protected $casts = [
         'status'  => RecipientStatus::class,
         'sent_at' => 'datetime',
+        'dispatch_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
 

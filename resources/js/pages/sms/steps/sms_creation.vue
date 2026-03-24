@@ -44,6 +44,7 @@
                     v-model="data.body" 
                     rows="4" 
                     cols="30" 
+                    maxlength="160"
                     style="resize: none" 
                     class="form-control shadow-none"
                     :class="{ 'p-invalid': errors[0] }"

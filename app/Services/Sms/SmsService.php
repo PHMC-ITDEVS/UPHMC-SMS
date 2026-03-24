@@ -8,6 +8,7 @@ use App\Models\Contact;
 use App\Models\ContactGroup;
 use App\Models\SmsMessage;
 use App\Models\SmsRecipient;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -43,16 +44,7 @@ class SmsService
     ): SmsMessage {
         return DB::transaction(function () use ($body, $recipients, $senderId, $gatewayId, $apiClientId, $source) {
             $message = $this->createMessage($body, $senderId, $gatewayId, count($recipients), null, SmsStatus::PROCESSING, $apiClientId, $source);
-
-            foreach ($recipients as $recipientData) {
-                $recipient = SmsRecipient::create([
-                    'sms_message_id' => $message->id,
-                    'phone_number'   => $this->normalizeNumber($recipientData['phone_number']),
-                    'contact_id'     => $recipientData['contact_id'] ?? null,
-                ]);
-
-                SendSmsJob::dispatch($recipient->id)->onQueue('sms');
-            }
+            $this->createRecipientsAndDispatchJobs($message, $recipients, now(), $senderId, $apiClientId, $source);
 
             $message->update(['status' => SmsStatus::QUEUED]);
 
@@ -176,20 +168,7 @@ class SmsService
                 apiClientId: $apiClientId,
                 source: $source
             );
-
-            $delay = now()->diffInSeconds($scheduledAt);
-
-            foreach ($recipients as $recipientData) {
-                $recipient = SmsRecipient::create([
-                    'sms_message_id' => $message->id,
-                    'phone_number'   => $this->normalizeNumber($recipientData['phone_number']),
-                    'contact_id'     => $recipientData['contact_id'] ?? null,
-                ]);
-
-                SendSmsJob::dispatch($recipient->id)
-                    ->onQueue('sms')
-                    ->delay($delay);
-            }
+            $this->createRecipientsAndDispatchJobs($message, $recipients, $scheduledAt, $senderId, $apiClientId, $source);
 
             Log::info("[SmsService] Scheduled {$message->total_recipients} SMS jobs for {$scheduledAt}", [
                 'message_id' => $message->id,
@@ -217,20 +196,14 @@ class SmsService
                 'sent_count' => 0,
                 'failed_count' => 0,
             ]);
-
-            $delay = max(0, now()->diffInSeconds($scheduledAt, false));
-
-            foreach ($recipients as $recipientData) {
-                $recipient = SmsRecipient::create([
-                    'sms_message_id' => $message->id,
-                    'phone_number'   => $this->normalizeNumber($recipientData['phone_number']),
-                    'contact_id'     => $recipientData['contact_id'] ?? null,
-                ]);
-
-                SendSmsJob::dispatch($recipient->id)
-                    ->onQueue('sms')
-                    ->delay($delay);
-            }
+            $this->createRecipientsAndDispatchJobs(
+                message: $message,
+                recipients: $recipients,
+                startAt: $scheduledAt,
+                senderId: $message->sender_id,
+                apiClientId: $message->api_client_id,
+                source: $message->source ?? 'web'
+            );
 
             Log::info("[SmsService] Updated scheduled draft SMS #{$message->id}", [
                 'scheduled_at' => $scheduledAt,
@@ -242,6 +215,120 @@ class SmsService
     }
 
     // ── Private Helpers ───────────────────────────────────────────────────────
+
+    private function createRecipientsAndDispatchJobs(
+        SmsMessage $message,
+        array $recipients,
+        Carbon $startAt,
+        int $senderId,
+        ?int $apiClientId,
+        string $source
+    ): void {
+        $dispatchPlan = $this->planRecipientDispatches(
+            recipients: $recipients,
+            startAt: $startAt,
+            senderId: $senderId,
+            apiClientId: $apiClientId,
+            source: $source,
+        );
+
+        foreach ($dispatchPlan as $plannedRecipient) {
+            $recipientData = $plannedRecipient['recipient'];
+            $dispatchAt = $plannedRecipient['dispatch_at'];
+
+            $recipient = SmsRecipient::create([
+                'sms_message_id' => $message->id,
+                'phone_number'   => $this->normalizeNumber($recipientData['phone_number']),
+                'contact_id'     => $recipientData['contact_id'] ?? null,
+                'dispatch_at'    => $dispatchAt,
+            ]);
+
+            $job = SendSmsJob::dispatch($recipient->id)->onQueue('sms');
+
+            if ($dispatchAt->greaterThan(now())) {
+                $job->delay($dispatchAt);
+            }
+        }
+    }
+
+    private function planRecipientDispatches(
+        array $recipients,
+        Carbon $startAt,
+        int $senderId,
+        ?int $apiClientId,
+        string $source
+    ): array {
+        $hourlyLimit = max(1, (int) env('SMS_MAX_RECIPIENTS_PER_HOUR', 100));
+        $startWindow = $startAt->copy()->startOfHour();
+        $startWindowKey = $startWindow->format('Y-m-d H:00:00');
+        $slotCounts = [];
+        $planned = [];
+
+        foreach ($recipients as $recipientData) {
+            $candidateWindow = $startWindow->copy();
+
+            while (true) {
+                $slotKey = $candidateWindow->format('Y-m-d H:00:00');
+
+                if (! array_key_exists($slotKey, $slotCounts)) {
+                    $slotCounts[$slotKey] = $this->reservedRecipientCountForWindow(
+                        windowStart: $candidateWindow,
+                        senderId: $senderId,
+                        apiClientId: $apiClientId,
+                        source: $source,
+                    );
+                }
+
+                if ($slotCounts[$slotKey] < $hourlyLimit) {
+                    $dispatchAt = $slotKey === $startWindowKey
+                        ? $startAt->copy()
+                        : $candidateWindow->copy();
+
+                    $planned[] = [
+                        'recipient' => $recipientData,
+                        'dispatch_at' => $dispatchAt,
+                    ];
+
+                    $slotCounts[$slotKey]++;
+                    break;
+                }
+
+                $candidateWindow->addHour();
+            }
+        }
+
+        return $planned;
+    }
+
+    private function reservedRecipientCountForWindow(
+        Carbon $windowStart,
+        int $senderId,
+        ?int $apiClientId,
+        string $source
+    ): int {
+        $windowEnd = $windowStart->copy()->endOfHour();
+
+        return SmsRecipient::query()
+            ->where(function ($query) use ($windowStart, $windowEnd) {
+                $query->whereBetween('dispatch_at', [$windowStart, $windowEnd])
+                    ->orWhere(function ($fallbackQuery) use ($windowStart, $windowEnd) {
+                        $fallbackQuery->whereNull('dispatch_at')
+                            ->whereBetween('created_at', [$windowStart, $windowEnd]);
+                    });
+            })
+            ->whereHas('smsMessage', function ($messageQuery) use ($senderId, $apiClientId, $source) {
+                $messageQuery->where('source', $source);
+
+                if ($source === 'api' && $apiClientId) {
+                    $messageQuery->where('api_client_id', $apiClientId);
+                    return;
+                }
+
+                $messageQuery->where('sender_id', $senderId)
+                    ->whereNull('api_client_id');
+            })
+            ->count();
+    }
 
     private function createMessage(
         string $body,

@@ -27,7 +27,7 @@ class SendSmsRequest extends FormRequest
             'recipients'         => ['required', 'array', 'min:1'],
             'recipients.*.type'  => ['required', 'in:number,contact,group'],
             'recipients.*.value' => ['required'],
-            'body'               => ['required', 'string', 'min:1', 'max:1600'],
+            'body'               => ['required', 'string', 'min:1', 'max:160'],
             'send_type'          => ['required', 'in:immediate,scheduled'],
         ];
 

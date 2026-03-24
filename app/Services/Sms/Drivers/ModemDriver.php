@@ -263,4 +263,5 @@ class ModemDriver implements SmsGatewayInterface
             })
             ->implode("\r\n");
     }
+
 }

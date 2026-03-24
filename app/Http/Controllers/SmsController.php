@@ -74,7 +74,7 @@ class SmsController extends Controller
     public function validateRequest(Request $request)
     {
         $request->validate([
-            'body' => ['required', 'string', 'max:1600'],
+            'body' => ['required', 'string', 'max:160'],
             'recipients' => ['required', 'array', 'min:1'],
             'recipients.*.type' => ['required', 'string', 'in:number,contact,group'],
             'recipients.*.value' => ['required'],
@@ -88,7 +88,7 @@ class SmsController extends Controller
     public function create(SendSmsRequest $request)
     {
         $rules = [
-            'body' => ['required', 'string', 'max:1600'],
+            'body' => ['required', 'string', 'max:160'],
             'recipients' => ['required', 'array', 'min:1'],
             'recipients.*.type' => ['required', 'string', 'in:number,contact,group'],
             'recipients.*.value' => ['required'],
