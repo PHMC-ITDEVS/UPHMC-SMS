@@ -43,6 +43,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $user,
                 'account'=> $user?->account,
+                'must_change_password' => (bool) ($user?->must_change_password ?? false),
             ]
         ]);
     }

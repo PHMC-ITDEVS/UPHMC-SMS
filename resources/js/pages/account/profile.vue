@@ -95,6 +95,90 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-7 col-lg-6">
+                <div class="card">
+                    <div class="card-header border-bottom">
+                        <h3 class="card-title mb-0">Change Password</h3>
+                    </div>
+
+                    <div class="card-body">
+                        <p-message
+                            v-if="_auth?.must_change_password"
+                            severity="warn"
+                            :closable="false"
+                            class="mb-4"
+                        >
+                            Your account is using a temporary password. Change it before continuing.
+                        </p-message>
+
+                        <v-form ref="passwordForm" class="row">
+                            <alert-errors :form="password" message="There were some problems with your input." />
+
+                            <div class="col-12">
+                                <v-field as="div" class="field" slim rules="required" name="current_password" v-slot="{ errors }">
+                                    <span class="p-float-label">
+                                        <p-input-password
+                                            v-model="password.current_password"
+                                            toggleMask
+                                            :feedback="false"
+                                            class="d-block"
+                                            inputClass="form-control shadow-none"
+                                            :class="{ 'p-invalid': errors[0] }"
+                                        />
+                                        <label>Current Password</label>
+                                    </span>
+                                    <small class="p-error">{{ errors[0] }}</small>
+                                </v-field>
+                            </div>
+
+                            <div class="col-12">
+                                <v-field as="div" class="field" slim rules="required|min:8" name="password" v-slot="{ errors }">
+                                    <span class="p-float-label">
+                                        <p-input-password
+                                            v-model="password.password"
+                                            toggleMask
+                                            :feedback="false"
+                                            class="d-block"
+                                            inputClass="form-control shadow-none"
+                                            :class="{ 'p-invalid': errors[0] }"
+                                        />
+                                        <label>New Password</label>
+                                    </span>
+                                    <small class="p-error">{{ errors[0] }}</small>
+                                </v-field>
+                            </div>
+
+                            <div class="col-12">
+                                <v-field as="div" class="field" slim rules="required" name="password_confirmation" v-slot="{ errors }">
+                                    <span class="p-float-label">
+                                        <p-input-password
+                                            v-model="password.password_confirmation"
+                                            toggleMask
+                                            :feedback="false"
+                                            class="d-block"
+                                            inputClass="form-control shadow-none"
+                                            :class="{ 'p-invalid': errors[0] }"
+                                        />
+                                        <label>Confirm New Password</label>
+                                    </span>
+                                    <small class="p-error">{{ errors[0] }}</small>
+                                </v-field>
+                            </div>
+                        </v-form>
+                    </div>
+
+                    <div class="card-footer text-right">
+                        <p-button
+                            class="btn btn-primary"
+                            :loading="passwordLoading"
+                            label="Update Password"
+                            icon="pi pi-lock"
+                            @click="updatePassword"
+                        />
+                    </div>
+                </div>
+            </div>
         </div>
     </app-layout>
 </template>
@@ -117,6 +201,7 @@ export default {
                 { current: true, title: 'Profile', url: 'profile.index' },
             ],
             loading: false,
+            passwordLoading: false,
             form: new Form({
                 first_name: '',
                 middle_name: '',
@@ -124,6 +209,11 @@ export default {
                 email: '',
                 image: '',
                 new_avatar: null,
+            }),
+            password: new Form({
+                current_password: '',
+                password: '',
+                password_confirmation: '',
             }),
         }
     },
@@ -169,6 +259,48 @@ export default {
                 })
                 .finally(() => {
                     this.loading = false;
+                });
+        },
+
+        updatePassword() {
+            if (this.passwordLoading) return;
+
+            if (this.password.password !== this.password.password_confirmation) {
+                this.$refs.passwordForm.setErrors({
+                    password_confirmation: ['Password confirmation does not match.'],
+                });
+                return;
+            }
+
+            this.passwordLoading = true;
+
+            AccountService.update_password(this.password)
+                .then((response) => {
+                    this.$toast.add({
+                        severity: 'success',
+                        summary: 'Success!',
+                        detail: response.data.message,
+                        life: 3000,
+                    });
+                    this.password.current_password = '';
+                    this.password.password = '';
+                    this.password.password_confirmation = '';
+
+                    if (this._auth) {
+                        this._auth.must_change_password = false;
+                    }
+
+                    this.router.visit('/');
+                })
+                .catch((errors) => {
+                    try {
+                        this.$refs.passwordForm.setErrors(this.getError(errors));
+                    } catch (error) {
+                        console.log(error);
+                    }
+                })
+                .finally(() => {
+                    this.passwordLoading = false;
                 });
         },
     },

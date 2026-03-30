@@ -63,6 +63,11 @@
                                         {{ data.department?.name ?? '-' }}
                                     </template>
                                 </p-column>
+                                <p-column header="Last Login">
+                                    <template #body="{data}">
+                                        {{ data.user?.last_login_at ?? '-' }}
+                                    </template>
+                                </p-column>
                                 <p-column field="created_at" header="Date Created"></p-column>
                                 <p-column header="Actions">
                                     <template #body="{data}">
@@ -71,6 +76,11 @@
                                                 class="btn btn-sm warning"
                                                 icon="pi pi-pencil"
                                                 @click.prevent="viewData(data)"
+                                            />
+                                            <p-button
+                                                class="btn btn-sm info"
+                                                icon="pi pi-key"
+                                                @click.prevent="regeneratePassword(data)"
                                             />
                                             <p-button
                                                 class="btn btn-sm danger"
@@ -302,6 +312,49 @@
             successEvent() {
                 this.dialog.show = !1;
                 this.getTableData(1);
+            },
+
+            async regeneratePassword(item) {
+                const confirmed = await this.swalMessage(
+                    'warning',
+                    'Regenerate temporary password?',
+                    'Generate',
+                    'Cancel',
+                    'The user will be required to change this password on the next login.',
+                    true,
+                    false
+                );
+
+                if (!confirmed) return;
+
+                AccountService.regenerate_password(item.id)
+                    .then((response) => {
+                        const credentials = response.data.credentials || {};
+
+                        this.swalMessage(
+                            'success',
+                            response.data.message,
+                            'Okay',
+                            false,
+                            `
+                                <div class="text-start">
+                                    <p class="mb-2"><strong>Username:</strong> ${credentials.username ?? '-'}</p>
+                                    <p class="mb-0"><strong>Temporary Password:</strong> ${credentials.temporary_password ?? '-'}</p>
+                                </div>
+                            `,
+                            false,
+                            false,
+                            false
+                        );
+
+                        this.getTableData(this.table.current_page);
+                    })
+                    .catch((errors) => {
+                        try {
+                            this.getError(errors);
+                        }
+                        catch(ex){ console.log(ex)}
+                    });
             }
         },
 

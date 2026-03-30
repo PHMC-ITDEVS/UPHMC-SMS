@@ -30,7 +30,7 @@ use App\Http\Controllers\SmsController;
 */
 Route::get('/image/{table}/{name}', [FileController::class, 'viewImage']);
 
-Route::middleware(['auth', 'route.access'])->group(function () 
+Route::middleware(['auth', 'password.change.required', 'route.access'])->group(function () 
 {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search/autocomplete', [GlobalSearchController::class, 'autocomplete'])->name('search.autocomplete');
@@ -44,6 +44,7 @@ Route::middleware(['auth', 'route.access'])->group(function ()
         Route::post('validate', [AccountController::class, 'validateRequest'])->name('account.validate');
         Route::get('data/{id}', [AccountController::class, 'get'])->name('account.get');
         Route::post('update/{id}', [AccountController::class, 'update'])->name('account.update');
+        Route::post('regenerate-password/{id}', [AccountController::class, 'regeneratePassword'])->name('account.regenerate_password');
         Route::post('delete/{account_number}', [AccountController::class, 'destroy'])->name('account.destroy');
         Route::post('mass-remove', [AccountController::class, 'massRemove'])->name('account.mass_remove');
     });

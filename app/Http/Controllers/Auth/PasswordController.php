@@ -13,7 +13,7 @@ class PasswordController extends Controller
     /**
      * Update the user's password.
      */
-    public function update(Request $request): RedirectResponse
+    public function update(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $validated = $request->validate([
             'current_password' => ['required', 'current_password'],
@@ -22,7 +22,16 @@ class PasswordController extends Controller
 
         $request->user()->update([
             'password' => Hash::make($validated['password']),
+            'must_change_password' => false,
+            'password_changed_at' => now(),
         ]);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => 1,
+                'message' => 'Password updated successfully.',
+            ]);
+        }
 
         return back();
     }

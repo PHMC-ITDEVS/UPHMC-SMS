@@ -64,6 +64,10 @@ class AuthenticatedSessionController extends Controller
 
         if(Auth::attempt($credentials, $remember) || $bypass_login_attempt) 
         {
+            Auth::user()->forceFill([
+                'last_login_at' => now(),
+            ])->save();
+
             $this->writeAuthAudit($request, Auth::user(), 'logged_in');
 
             if($remember) 
@@ -77,7 +81,13 @@ class AuthenticatedSessionController extends Controller
                 Cookie::queue(Cookie::forget('password'));
             }
             
-            return response()->json(['success' => 1, "data" => ""],200);
+            return response()->json([
+                'success' => 1,
+                'data' => [
+                    'must_change_password' => (bool) Auth::user()->must_change_password,
+                    'redirect_to' => Auth::user()->must_change_password ? route('profile.index') : '/',
+                ],
+            ],200);
         }
 
         return response()->json(['success' => 0, "message" => "Invalid Credentials"],500);

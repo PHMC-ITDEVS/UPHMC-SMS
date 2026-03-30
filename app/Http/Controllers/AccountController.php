@@ -11,9 +11,11 @@ use App\Models\User;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use App\Library\Helper;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 use Carbon\Carbon;
 class AccountController extends Controller
 {
@@ -139,7 +141,8 @@ class AccountController extends Controller
                 $user = User::create([
                     "username"=>$request->username,
                     "email"=>$request->email,
-                    "password"=>bcrypt($request->password)
+                    "password"=>bcrypt($request->password),
+                    "must_change_password" => true,
                 ]);
         
                 $account_number = $ref = Helper::ref_number("A",20);
@@ -220,6 +223,37 @@ class AccountController extends Controller
         return response()->json(['success' => 1,"message"=>"Success!"]);
     }
 
+    public function regeneratePassword($id)
+    {
+        $account = Account::with('user')->findOrFail($id);
+        $user = $account->user;
+
+        if (! $user) {
+            return response()->json([
+                'success' => 0,
+                'message' => 'User account not found.',
+            ], 404);
+        }
+
+        $temporaryPassword = $this->makeTemporaryPassword();
+
+        $user->forceFill([
+            'password' => Hash::make($temporaryPassword),
+            'must_change_password' => true,
+            'password_changed_at' => null,
+            'remember_token' => Str::random(60),
+        ])->save();
+
+        return response()->json([
+            'success' => 1,
+            'message' => 'Temporary password generated successfully.',
+            'credentials' => [
+                'username' => $user->username,
+                'temporary_password' => $temporaryPassword,
+            ],
+        ]);
+    }
+
     private function resolveUserId(Request $request): ?int
     {
         $userId = $request->input('user_id');
@@ -236,6 +270,12 @@ class AccountController extends Controller
 
         return Account::where('id', $accountId)->value('user_id');
     }
+
+    private function makeTemporaryPassword(): string
+    {
+        return strtoupper(Str::random(4)) . rand(1000, 9999);
+    }
+
     public function destroy($account_number, Request $request)
     {
         $account = Account::where("account_number", $account_number)->firstOrFail();

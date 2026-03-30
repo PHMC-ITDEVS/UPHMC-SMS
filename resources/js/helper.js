@@ -17,6 +17,10 @@ export default {
             return this.$page.props.appName;
         },
 
+        _auth() {
+            return this.$page.props.auth;
+        },
+
         _user() {
             return this.$page.props.auth.user;
         },

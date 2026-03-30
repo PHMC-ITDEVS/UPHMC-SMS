@@ -107,7 +107,8 @@
                 this.loading = true;
                 AuthService.login(this.form)
                 .then((response) => {
-                    this.router.visit("/");
+                    const redirectTo = response?.data?.data?.redirect_to || "/";
+                    this.router.visit(redirectTo);
                 })
                 .catch((errors) => {
                     console.log(errors);
@@ -118,8 +119,10 @@
                     catch(ex) {
                         console.log(ex)
                     }
-                    this.loading = false;
                 })
+                .finally(() => {
+                    this.loading = false;
+                });
             },
 
             fillInfo() {
