@@ -1,0 +1,1 @@
+import{a as e}from"./API-ab3efa3f.js";var a="position";const n={async list(t){return e.get(`${a}/all`,{params:t})},async validate(t){return e.post(`${a}/validate`,t)},async get(t){return e.get(`${a}/data/${t}`)},async create(t){return e.post(`${a}/create`,t)},async update(t,r){return e.post(`${a}/update/${r}`,t)},async remove(t){return e.post(`${a}/delete/${t}`)}};export{n as P};
