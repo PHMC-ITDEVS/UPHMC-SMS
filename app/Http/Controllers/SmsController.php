@@ -80,7 +80,13 @@ class SmsController extends Controller
             'recipients.*.value' => ['required'],
             'send_type' => ['required', 'string', 'in:immediate,scheduled'],
             'scheduled_at' => ['exclude_unless:send_type,scheduled', 'required', 'date'],
-        ]);
+        ],
+        [
+            'recipients.required' => 'Please add at least one recipient.',
+            'body.required' => 'Compose your message.',
+            'body.max' => 'Message body cannot exceed 160 characters.',
+        ]
+        );
 
         return response()->json(['message' => 'Validation passed.']);
     }  

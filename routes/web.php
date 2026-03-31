@@ -30,7 +30,7 @@ use App\Http\Controllers\SmsController;
 */
 Route::get('/image/{table}/{name}', [FileController::class, 'viewImage']);
 
-Route::middleware(['auth', 'password.change.required', 'route.access'])->group(function () 
+Route::middleware(['auth', 'no.cache', 'password.change.required', 'route.access'])->group(function () 
 {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/search/autocomplete', [GlobalSearchController::class, 'autocomplete'])->name('search.autocomplete');

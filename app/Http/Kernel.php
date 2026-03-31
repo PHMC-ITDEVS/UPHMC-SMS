@@ -66,6 +66,7 @@ class Kernel extends HttpKernel
         'route.access' => \App\Http\Middleware\AuthorizeRouteAccess::class,
         'api.client' => \App\Http\Middleware\AuthenticateApiClient::class,
         'password.change.required' => \App\Http\Middleware\EnsurePasswordIsChanged::class,
+        'no.cache' => \App\Http\Middleware\PreventBrowserCache::class,
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
     ];
 }

@@ -31,6 +31,10 @@ class AuthenticatedSessionController extends Controller
             'status' => session('status'),
             'username' => Cookie::get('username'),
             'password' => Cookie::get('password') ? decrypt(Cookie::get('password')) : ''
+        ])->toResponse(request())->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
         ]);
     }
 
@@ -109,7 +113,11 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerateToken();
 
-        return redirect('/');
+        return redirect()->route('login')->withHeaders([
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => 'Fri, 01 Jan 1990 00:00:00 GMT',
+        ]);
     }
 
     private function writeAuthAudit(Request $request, ?User $user, string $event): void
