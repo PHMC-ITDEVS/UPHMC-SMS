@@ -333,13 +333,33 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--port", required=True, help="Serial port e.g. COM3 or /dev/ttyUSB0")
     parser.add_argument("--baud", required=False, default=115200, type=int, help="Baud rate")
-    parser.add_argument("--timeout", required=False, default=10, type=int, help="AT timeout in seconds")
+    parser.add_argument(
+        "--timeout",
+        required=False,
+        default=120,
+        type=int,
+        help="Overall CMGL read timeout in seconds"
+    )
+
+    parser.add_argument(
+        "--idle-timeout",
+        required=False,
+        default=5.0,
+        type=float,
+        help="Seconds without new modem data before CMGL is considered complete"
+    )
     return parser
 
 
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
+
+    if args.timeout <= 0:
+        parser.error("--timeout must be greater than 0")
+
+    if args.idle_timeout <= 0:
+        parser.error("--idle-timeout must be greater than 0")
 
     try:
         ser = serial.Serial(
