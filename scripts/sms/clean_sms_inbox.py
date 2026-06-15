@@ -393,8 +393,16 @@ def main() -> None:
         send_at(ser, "AT+CMGF=1", "OK", timeout=args.timeout)
         send_at(ser, 'AT+CSCS="GSM"', "OK", timeout=args.timeout)
 
-        response = read_all_messages(ser, timeout=args.timeout)
+        response = read_all_messages(
+            ser,
+            timeout=args.timeout,
+            idle_timeout=args.idle_timeout,
+        )
+
         messages = parse_cmgl_response(response)
+        debug_log(
+            f"Parsed {len(messages)} SMS message(s) from SIM inbox"
+        )
 
         if not messages:
             print("OK: no SIM inbox messages found")
@@ -406,11 +414,37 @@ def main() -> None:
         deleted_count = 0
 
         for inbox_message in messages:
-            deleted_at = datetime.now(timezone.utc)
-            log_message(conn, inbox_message, deleted_at)
-            delete_message(ser, inbox_message.index, timeout=args.timeout)
-            conn.commit()
-            deleted_count += 1
+            try:
+                debug_log(
+                    f"Deleting SMS "
+                    f"index={inbox_message.index} "
+                    f"sender={inbox_message.sender}"
+                )
+
+                deleted_at = datetime.now(timezone.utc)
+
+                log_message(
+                    conn,
+                    inbox_message,
+                    deleted_at,
+                )
+
+                delete_message(
+                    ser,
+                    inbox_message.index,
+                    timeout=args.timeout,
+                )
+
+                conn.commit()
+                deleted_count += 1
+
+            except Exception as exc:
+                conn.rollback()
+
+                raise RuntimeError(
+                    f"Failed deleting SMS "
+                    f"index={inbox_message.index}: {exc}"
+                ) from exc
 
         print(f"OK: logged and deleted {deleted_count} SIM inbox message(s)")
         sys.exit(0)
