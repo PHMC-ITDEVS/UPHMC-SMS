@@ -113,32 +113,118 @@ def wake_modem(ser: "serial.Serial", attempts: int = 5) -> None:
     )
 
 
-def read_all_messages(ser: "serial.Serial", timeout: int) -> str:
+def debug_log(message: str) -> None:
+    print(f"DEBUG: {message}", file=sys.stderr)
+
+
+def count_cmgl_records(response: str) -> int:
+    normalized = response.replace("\r\n", "\n").replace("\r", "\n")
+    return len(
+        re.findall(
+            r"^\+CMGL:\s*\d+,",
+            normalized,
+            flags=re.MULTILINE,
+        )
+    )
+
+
+def has_cmgl_terminator(response: str) -> bool:
+    normalized = (
+        response
+        .replace("\r\n", "\n")
+        .replace("\r", "\n")
+        .rstrip()
+    )
+
+    return normalized == "OK" or normalized.endswith("\nOK")
+
+
+def read_all_messages(
+    ser: "serial.Serial",
+    timeout: int,
+    idle_timeout: float = 5.0,
+) -> str:
     ser.write(b'AT+CMGL="ALL"\r')
     ser.flush()
 
     response = ""
-    deadline = time.monotonic() + timeout
+    bytes_received = 0
+    messages_parsed = 0
+
+    started_at = time.monotonic()
+    last_data_at = started_at
+    deadline = started_at + timeout
 
     while time.monotonic() < deadline:
         waiting = ser.in_waiting
-        if waiting > 0:
-            chunk = ser.read(waiting).decode("latin-1", errors="replace")
-            response += chunk
 
-            if "\r\nOK\r\n" in response or response.rstrip().endswith("\nOK"):
+        if waiting > 0:
+            raw_chunk = ser.read(waiting)
+            chunk = raw_chunk.decode(
+                "latin-1",
+                errors="replace",
+            )
+
+            response += chunk
+            bytes_received += len(raw_chunk)
+
+            last_data_at = time.monotonic()
+            messages_parsed = count_cmgl_records(response)
+
+            debug_log(
+                "CMGL chunk "
+                f"bytes={bytes_received} "
+                f"messages={messages_parsed} "
+                f"elapsed={last_data_at - started_at:.2f}s"
+            )
+
+            if has_cmgl_terminator(response):
+                debug_log(
+                    "CMGL completed with OK "
+                    f"bytes={bytes_received} "
+                    f"messages={messages_parsed} "
+                    f"elapsed={time.monotonic() - started_at:.2f}s"
+                )
                 return response
 
             if is_busy_text(response):
-                raise RuntimeError(f"MODEM_BUSY: {response.strip()}")
+                raise RuntimeError(
+                    f"MODEM_BUSY: {response.strip()}"
+                )
 
-            if "ERROR" in response or "+CMS ERROR" in response or "+CME ERROR" in response:
-                raise RuntimeError(f"Failed to read SIM inbox: {response.strip()}")
+            if (
+                "ERROR" in response
+                or "+CMS ERROR" in response
+                or "+CME ERROR" in response
+            ):
+                raise RuntimeError(
+                    f"Failed to read SIM inbox: {response.strip()}"
+                )
+
+        else:
+            idle_elapsed = time.monotonic() - last_data_at
+
+            if (
+                messages_parsed > 0
+                and idle_elapsed >= idle_timeout
+            ):
+                debug_log(
+                    "CMGL completed via idle timeout "
+                    f"bytes={bytes_received} "
+                    f"messages={messages_parsed} "
+                    f"elapsed={time.monotonic() - started_at:.2f}s "
+                    f"idle={idle_elapsed:.2f}s"
+                )
+                return response
 
         time.sleep(0.05)
 
     raise TimeoutError(
-        f"Timeout ({timeout}s) waiting for CMGL response. Partial response: '{response.strip()}'"
+        "Timeout "
+        f"({timeout}s) waiting for CMGL response. "
+        f"bytes={bytes_received}, "
+        f"messages={messages_parsed}, "
+        f"partial='{response[:500]}'"
     )
 
 
@@ -185,8 +271,10 @@ def parse_cmgl_response(response: str) -> list[InboxMessage]:
 
     for idx, match in enumerate(matches):
         body_start = match.end()
-        body_end = matches[idx + 1].start() if idx + 1 < len(matches) else normalized.find("\nOK", body_start)
-        if body_end == -1:
+        
+        if idx + 1 < len(matches):
+            body_end = matches[idx + 1].start()
+        else:
             body_end = len(normalized)
 
         body = normalized[body_start:body_end].strip("\n")
